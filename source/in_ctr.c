@@ -18,6 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+
 // in_ctr.c -- for the Nintendo 3DS
 
 #include "quakedef.h"
@@ -28,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //Touchscreen mode identifiers
 #define TMODE_TOUCHPAD 1
 #define TMODE_KEYBOARD 2
+#define TMODE_SETTINGS 3
 
 //Keyboard is currently laid out on a 14*4 grid of 20px*20px boxes for lazy implementation
 char keymap[14 * 4] = {
@@ -39,8 +41,6 @@ char keymap[14 * 4] = {
 
 u16* touchpadOverlay;
 u16* keyboardOverlay;
-
-cvar_t	m_filter = {"m_filter","0"};
 
 circlePosition cstick;
 circlePosition circlepad;
@@ -94,17 +94,22 @@ void ctrProcessTap(){
 }
 
 void ctrDrawTouchOverlay(){
-  u16* overlay;
-  if(tmode == 1)
+  u16* overlay = 0;
+  if(tmode == TMODE_TOUCHPAD)
     overlay = touchpadOverlay;
   else
     overlay = keyboardOverlay;
+
+  if(!overlay)
+    return;
   int x,y;
+
 	for(x=0; x<320; x++){
 		for(y=0; y<240;y++){
 			tfb[(x*240 + (239 - y))] = overlay[(y*320 + x)];
 		}
 	}
+
 }
 
 void IN_Init (void)
@@ -112,8 +117,11 @@ void IN_Init (void)
   if ( COM_CheckParm ("-nomouse") )
     return;
 
-  tmode = 1;
-  Cvar_RegisterVariable (&m_filter);
+  tmode = TMODE_TOUCHPAD; //Start in touchpad Mode
+
+  tfb = (u16*)gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+
+  //Load overlay files from sdmc for easier testing
   FILE *texture = fopen("touchpadOverlay.bin", "rb");
   if(!texture)
     Sys_Error("Could not open touchpadOverlay.bin\n");
@@ -123,6 +131,7 @@ void IN_Init (void)
   touchpadOverlay = malloc(size);
   fread(touchpadOverlay, 1, size, texture);
   fclose(texture);
+
   texture = fopen("keyboardOverlay.bin", "rb");
   if(!texture)
     Sys_Error("Could not open keyboardOverlay.bin\n");
@@ -132,8 +141,6 @@ void IN_Init (void)
   keyboardOverlay = malloc(size);
   fread(keyboardOverlay, 1, size, texture);
   fclose(texture);
-  tfb = (u16*)gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
-  //ctrDrawTouchOverlay();
 }
 
 void IN_Shutdown (void)
@@ -161,12 +168,11 @@ void IN_Move (usercmd_t *cmd)
     tick = Sys_FloatTime();
   }
 
+  //If touchscreen is released in certain amount of time it's a tap
   if(hidKeysUp() & KEY_TOUCH){
-    if((Sys_FloatTime() - tick) < 1.0)
+    if((Sys_FloatTime() - tick) < 1.0) //FIX ME: find optimal timeframe
       ctrProcessTap();
   }
-
-
 
   else if(hidKeysHeld() & KEY_TOUCH){
     hidTouchRead(&touch);
@@ -179,9 +185,10 @@ void IN_Move (usercmd_t *cmd)
   }
 
   hidCircleRead(&circlepad);
-  cmd->forwardmove += m_forward.value * circlepad.dy * 2;
-  cmd->sidemove += m_side.value * circlepad.dx * 2;
+  cmd->forwardmove += m_forward.value * circlepad.dy * 2; //FIX ME: allow circlepad sensitivity to be changed
+  cmd->sidemove += m_side.value * circlepad.dx * 2; //FIX ME: allow player  to choose between strafing or turning
 
+  //cStick is only available on N3DS... Until libctru implements support for circlePad Pro
   if(isN3DS){
     hidCstickRead(&cstick);
     cstick.dx = abs(cstick.dx) < 10 ? 0 : cstick.dx * sensitivity.value * 0.01;
@@ -193,8 +200,7 @@ void IN_Move (usercmd_t *cmd)
     }
   }
 
+  //If mouselook enabled, stop camera from centering
   if(in_mlook.state & 1)
     V_StopPitchDrift ();
-
-
 }
