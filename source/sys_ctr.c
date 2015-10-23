@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <3ds.h>
 #include "ctr.h"
+#include "touch_ctr.h"
 
 u8 isN3DS;
 
@@ -289,6 +290,8 @@ void Sys_SendKeyEvents (void)
 		CTR_KeyDown(kDown);
 	if(kUp)
 		CTR_KeyUp(kUp);
+
+	Touch_Update();
 }
 
 void Sys_HighFPPrecision (void)
@@ -304,6 +307,7 @@ void Sys_LowFPPrecision (void)
 int main (int argc, char **argv)
 {
 	float		time, oldtime;
+
 	APT_CheckNew3DS(NULL, &isN3DS);
 	if(isN3DS)
 		osSetSpeedupEnable(true);
@@ -326,7 +330,8 @@ int main (int argc, char **argv)
 	parms.argv = com_argv;
 	Host_Init (&parms);
 	hostInitialized = true;
-	ctrDrawTouchOverlay();
+	Touch_Init();
+	Touch_DrawOverlay();
 	//Sys_Init();
 	oldtime = Sys_FloatTime() -0.1;
 	while (1)

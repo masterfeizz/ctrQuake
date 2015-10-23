@@ -31,6 +31,7 @@ BUILD		:=	build
 SOURCES		:=	source
 APP_AUTHOR := MasterFeizz
 APP_TITLE := ctrQuake
+APP_DESCRIPTION := Port of Quake
 
 DATA		:=	data
 INCLUDES	:=	include
@@ -143,9 +144,11 @@ COMMON_OBJS =	chase.o \
 	snd_mem.o \
 	snd_ctr.o \
 	vid_ctr.o \
-	net_none.o \
+	net_bsd.o \
+	net_udpctr.o \
 	in_ctr.o \
-	cd_null.o
+	cd_null.o \
+	touch_ctr.o
 
 
 CFILES		:=	$(COMMON_OBJS)

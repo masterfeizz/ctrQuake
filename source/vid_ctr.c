@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 viddef_t	vid;				// global video state
 
-int	basewidth, baseheight, offset;
+int	basewidth, baseheight;
 
 byte	*vid_buffer;
 short	*zbuffer;
@@ -59,16 +59,7 @@ void	VID_ShiftPalette (unsigned char *palette)
 void	VID_Init (unsigned char *palette)
 {
 	baseheight = 240;
-
-	if(isN3DS){
-		basewidth = 400;
-		offset = 0;
-	}
-
-	else{
-		basewidth = 320;
-		offset = 40;
-	}
+	basewidth = 400;
 
 	vid_buffer = malloc(sizeof(byte) * basewidth * baseheight);
 	zbuffer = malloc(sizeof(short) * basewidth * baseheight);
@@ -96,7 +87,7 @@ void	VID_Update (vrect_t *rects)
 	int x,y;
 	for(x=0; x<basewidth; x++){
 		for(y=0; y<baseheight;y++){
-			fb[((offset + x)*240 + (239 -y))] = d_8to16table[vid.buffer[y*basewidth + x]];
+			fb[((x*240) + (239 -y))] = d_8to16table[vid.buffer[y*basewidth + x]];
 		}
 	}
 }
