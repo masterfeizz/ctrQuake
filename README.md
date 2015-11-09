@@ -9,6 +9,8 @@ ctrQuake is a free, unoficial port of Quake for the Nintendo 3DS. It is fully pl
 ## Usage
 You must first bind the keys on the options screen before playing
 
+To use mods: place mod folder in the same directory as ctrQuake.3dsx and create a shortcut with the folder name as argument. See tf.xml as example
+
 ## TODO List
 - [ ] Better input handling (Currenty being worked on)
 - [ ] Networking
