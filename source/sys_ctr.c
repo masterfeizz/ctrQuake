@@ -294,11 +294,12 @@ int main (int argc, char **argv)
 	int   qargc = 1;
 
 	qargv[0] = "";
-
-	if(strlen(argv[1]) != 0){
-		qargv[1] = "-game";
-		qargv[2] = argv[1];
-		qargc += 2;
+	if(argc>1){
+		if(strlen(argv[1]) != 0){
+			qargv[1] = "-game";
+			qargv[2] = argv[1];
+			qargc += 2;
+		}
 	}
 
 	static quakeparms_t    parms;
