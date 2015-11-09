@@ -82,16 +82,20 @@ int UDP_Init (void)
 	if (COM_CheckParm ("-noudp"))
 		return -1;
 
-  SOC_buffer = (u32*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
-  if(SOC_buffer == NULL)
-  {
-    Sys_Error("Failed to allocate SOC_Buffer\n");
-  }
-  ret = SOC_Initialize(SOC_buffer, SOC_BUFFERSIZE);
-  if(SOC_buffer == NULL)
-  {
-    Sys_Error("SOC_Initialize failed\n");
-  }
+	SOC_buffer = (u32*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
+	
+	if(SOC_buffer == NULL)
+	{
+		Sys_Error("Failed to allocate SOC_Buffer\n");
+	}
+	ret = SOC_Initialize(SOC_buffer, SOC_BUFFERSIZE);
+	
+	if(ret != 0)
+	{
+		
+		free(SOC_buffer);
+		return -1;
+	}
 	myAddr = gethostid();
 
 	// if the quake hostname isn't set, set it to the machine name
@@ -101,7 +105,11 @@ int UDP_Init (void)
 	}
 
 	if ((net_controlsocket = UDP_OpenSocket (5000)) == -1) //Passing 0 causes function to fail on 3DS
-		Sys_Error("UDP_Init: Unable to open control socket\n");
+	{
+		SOC_Shutdown();
+		free(SOC_buffer);
+		return -1;
+	}
 
 	((struct sockaddr_in *)&broadcastaddr)->sin_family = AF_INET;
 	((struct sockaddr_in *)&broadcastaddr)->sin_addr.s_addr = INADDR_BROADCAST;

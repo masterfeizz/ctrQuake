@@ -58,24 +58,31 @@ void IN_Move (usercmd_t *cmd)
 
   hidCircleRead(&circlepad);
   //CirclePad deadzone to fix ghost movements
-  if(abs(circlepad.dy) > 15)
-    cmd->forwardmove += m_forward.value * circlepad.dy * 2; //FIX ME: allow circlepad sensitivity to be changed
-  if(abs(circlepad.dx) > 15)
-    cmd->sidemove += m_side.value * circlepad.dx * 2; //FIX ME: allow player  to choose between strafing or turning
+  if(abs(circlepad.dy) > 15){
+    cmd->forwardmove += m_forward.value * circlepad.dy * 2;
+  }
+  if(abs(circlepad.dx) > 15){
+    if((in_strafe.state & 1) || (lookstrafe.value))
+      cmd->sidemove += m_side.value * circlepad.dx * 2;
+    else
+      cl.viewangles[YAW] -= m_side.value * circlepad.dx * 0.03;
+  }
 
   //cStick is only available on N3DS... Until libctru implements support for circlePad Pro
   if(isN3DS){
+
     hidCstickRead(&cstick);
-    cstick.dx = abs(cstick.dx) < 10 ? 0 : cstick.dx * sensitivity.value * 0.01;
-    cstick.dy = abs(cstick.dy) < 15 ? 0 : cstick.dy * sensitivity.value * 0.01;
+
+    if(m_pitch.value < 0)
+      cstick.dy = -cstick.dy;
+
+    cstick.dx = abs(cstick.dx) < 10 ? 0 : cstick.dx * csensitivity.value * 0.01;
+    cstick.dy = abs(cstick.dy) < 10 ? 0 : cstick.dy * csensitivity.value * 0.01;
 
     cl.viewangles[YAW] -= cstick.dx;
-    if(in_mlook.state & 1){
-      cl.viewangles[PITCH] -= cstick.dy;
-    }
+    cl.viewangles[PITCH] -= cstick.dy;
   }
 
-  //If mouselook enabled, stop camera from centering
-  if(in_mlook.state & 1)
-    V_StopPitchDrift ();
+  V_StopPitchDrift ();
+
 }

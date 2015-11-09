@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "errno.h"
 
 #include <3ds.h>
+#include <dirent.h>
 #include "ctr.h"
 #include "touch_ctr.h"
 
@@ -219,67 +220,37 @@ void Sys_Sleep (void)
 {
 }
 
-void CTR_KeyDown(u32 keys){
+void CTR_SetKeys(u32 keys, u32 state){
 	if( keys & KEY_SELECT)
-		Key_Event(K_ESCAPE, true);
+		Key_Event(K_ESCAPE, state);
 	if( keys & KEY_START)
-		Key_Event(K_ENTER, true);
+		Key_Event(K_ENTER, state);
 	if( keys & KEY_DUP)
-		Key_Event(K_UPARROW, true);
+		Key_Event(K_UPARROW, state);
 	if( keys & KEY_DDOWN)
-		Key_Event(K_DOWNARROW, true);
+		Key_Event(K_DOWNARROW, state);
 	if( keys & KEY_DLEFT)
-		Key_Event(K_LEFTARROW, true);
+		Key_Event(K_LEFTARROW, state);
 	if( keys & KEY_DRIGHT)
-		Key_Event(K_RIGHTARROW, true);
+		Key_Event(K_RIGHTARROW, state);
 	if( keys & KEY_Y)
-		Key_Event('y', true);
+		Key_Event('y', state);
 	if( keys & KEY_X)
-		Key_Event('x', true);
+		Key_Event('x', state);
 	if( keys & KEY_B)
-		Key_Event('b', true);
+		Key_Event('b', state);
 	if( keys & KEY_A)
-		Key_Event('a', true);
+		Key_Event('a', state);
 	if( keys & KEY_L)
-		Key_Event('l', true);
+		Key_Event('l', state);
 	if( keys & KEY_R)
-		Key_Event('r', true);
+		Key_Event('r', state);
 	if( keys & KEY_ZL)
-		Key_Event('k', true);
+		Key_Event('k', state);
 	if( keys & KEY_ZR)
-		Key_Event('t', true);
+		Key_Event('t', state);
 }
 
-void CTR_KeyUp(u32 keys){
-	if( keys & KEY_SELECT)
-		Key_Event(K_ESCAPE, false);
-	if( keys & KEY_START)
-		Key_Event(K_ENTER, false);
-	if( keys & KEY_DUP)
-		Key_Event(K_UPARROW, false);
-	if( keys & KEY_DDOWN)
-		Key_Event(K_DOWNARROW, false);
-	if( keys & KEY_DLEFT)
-		Key_Event(K_LEFTARROW, false);
-	if( keys & KEY_DRIGHT)
-		Key_Event(K_RIGHTARROW, false);
-	if( keys & KEY_Y)
-		Key_Event('y', false);
-	if( keys & KEY_X)
-		Key_Event('x', false);
-	if( keys & KEY_B)
-		Key_Event('b', false);
-	if( keys & KEY_A)
-		Key_Event('a', false);
-	if( keys & KEY_L)
-		Key_Event('l', false);
-	if( keys & KEY_R)
-		Key_Event('r', false);
-	if( keys & KEY_ZL)
-		Key_Event('k', false);
-	if( keys & KEY_ZR)
-		Key_Event('t', false);
-}
 
 void Sys_SendKeyEvents (void)
 {
@@ -287,9 +258,9 @@ void Sys_SendKeyEvents (void)
 	u32 kDown = hidKeysDown();
 	u32 kUp = hidKeysUp();
 	if(kDown)
-		CTR_KeyDown(kDown);
+		CTR_SetKeys(kDown, true);
 	if(kUp)
-		CTR_KeyUp(kUp);
+		CTR_SetKeys(kUp, false);
 
 	Touch_Update();
 }
@@ -308,7 +279,7 @@ int main (int argc, char **argv)
 {
 	float		time, oldtime;
 
-	APT_CheckNew3DS(NULL, &isN3DS);
+	APT_CheckNew3DS(&isN3DS);
 	if(isN3DS)
 		osSetSpeedupEnable(true);
 
@@ -318,13 +289,25 @@ int main (int argc, char **argv)
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
 	gfxSet3D(false);
 	consoleInit(GFX_BOTTOM, NULL);
+
+	char *qargv[3];
+	int   qargc = 1;
+
+	qargv[0] = "";
+
+	if(strlen(argv[1]) != 0){
+		qargv[1] = "-game";
+		qargv[2] = argv[1];
+		qargc += 2;
+	}
+
 	static quakeparms_t    parms;
 
-	parms.memsize = 16*1024*1024;
+	parms.memsize = 24*1024*1024;
 	parms.membase = malloc (parms.memsize);
 	parms.basedir = ".";
 
-	COM_InitArgv (argc, argv);
+	COM_InitArgv (qargc, qargv);
 
 	parms.argc = com_argc;
 	parms.argv = com_argv;
@@ -334,7 +317,7 @@ int main (int argc, char **argv)
 	Touch_DrawOverlay();
 	//Sys_Init();
 	oldtime = Sys_FloatTime() -0.1;
-	while (1)
+	while (aptMainLoop())
 	{
 		time = Sys_FloatTime();
 		Host_Frame (time - oldtime);

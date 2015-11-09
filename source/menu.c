@@ -1091,6 +1091,16 @@ void M_AdjustSliders (int dir)
 			sensitivity.value = 11;
 		Cvar_SetValue ("sensitivity", sensitivity.value);
 		break;
+	#ifdef _3DS
+	case 6:	// mouse speed
+		csensitivity.value += dir * 0.5;
+		if (csensitivity.value < 1)
+			csensitivity.value = 1;
+		if (csensitivity.value > 11)
+			csensitivity.value = 11;
+		Cvar_SetValue ("csensitivity", csensitivity.value);
+		break;
+	#else
 	case 6:	// music volume
 #ifdef _WIN32
 		bgmvolume.value += dir * 1.0;
@@ -1103,6 +1113,7 @@ void M_AdjustSliders (int dir)
 			bgmvolume.value = 1;
 		Cvar_SetValue ("bgmvolume", bgmvolume.value);
 		break;
+	#endif
 	case 7:	// sfx volume
 		volume.value += dir * 0.1;
 		if (volume.value < 0)
@@ -1196,13 +1207,27 @@ void M_Options_Draw (void)
 	r = (1.0 - v_gamma.value) / 0.5;
 	M_DrawSlider (220, 64, r);
 
+	#ifdef _3DS
+	M_Print (16, 72, "     Touch Sensitivity");
+	#else
 	M_Print (16, 72, "           Mouse Speed");
+	#endif
 	r = (sensitivity.value - 1)/10;
 	M_DrawSlider (220, 72, r);
+
+	#ifdef _3DS
+
+	M_Print (16, 80, "         C Sensitivity");
+	r = (csensitivity.value - 1)/10;
+	M_DrawSlider (220, 80, r);
+
+	#else
 
 	M_Print (16, 80, "       CD Music Volume");
 	r = bgmvolume.value;
 	M_DrawSlider (220, 80, r);
+
+	#endif
 
 	M_Print (16, 88, "          Sound Volume");
 	r = volume.value;
@@ -1211,13 +1236,21 @@ void M_Options_Draw (void)
 	M_Print (16, 96,  "            Always Run");
 	M_DrawCheckbox (220, 96, cl_forwardspeed.value > 200);
 
+	#ifdef _3DS
+	M_Print (16, 104, "       Invert C-Button");
+	#else
 	M_Print (16, 104, "          Invert Mouse");
+	#endif
 	M_DrawCheckbox (220, 104, m_pitch.value < 0);
 
 	M_Print (16, 112, "            Lookspring");
 	M_DrawCheckbox (220, 112, lookspring.value);
 
+	#ifdef _3DS
+	M_Print (16, 120, "      CirclePad Strafe");
+	#else
 	M_Print (16, 120, "            Lookstrafe");
+	#endif
 	M_DrawCheckbox (220, 120, lookstrafe.value);
 
 	if (vid_menudrawfn)
