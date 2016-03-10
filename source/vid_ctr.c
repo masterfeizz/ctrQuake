@@ -54,6 +54,7 @@ void	VID_SetPalette (unsigned char *palette)
 
 void	VID_ShiftPalette (unsigned char *palette)
 {
+	VID_SetPalette(palette);
 }
 
 void	VID_Init (unsigned char *palette)
