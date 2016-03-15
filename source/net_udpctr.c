@@ -55,7 +55,6 @@ inline uint16_t ntohs(uint16_t netshort)
 
 static u32 *SOC_buffer = NULL;
 
-extern int gethostname (char *, int);
 extern int close (int);
 
 extern cvar_t hostname;
@@ -88,7 +87,7 @@ int UDP_Init (void)
 	{
 		Sys_Error("Failed to allocate SOC_Buffer\n");
 	}
-	ret = SOC_Initialize(SOC_buffer, SOC_BUFFERSIZE);
+	ret = socInit(SOC_buffer, SOC_BUFFERSIZE);
 	
 	if(ret != 0)
 	{
@@ -106,7 +105,7 @@ int UDP_Init (void)
 
 	if ((net_controlsocket = UDP_OpenSocket (5000)) == -1) //Passing 0 causes function to fail on 3DS
 	{
-		SOC_Shutdown();
+		socExit();
 		free(SOC_buffer);
 		return -1;
 	}
@@ -195,7 +194,7 @@ int UDP_CloseSocket (int socket)
 	if (socket == net_broadcastsocket)
 		net_broadcastsocket = 0;
 	close (socket);
-	return SOC_Shutdown();
+	return socExit();
 }
 
 
