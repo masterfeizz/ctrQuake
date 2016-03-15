@@ -19,6 +19,7 @@ To use mods: place mod folder in the same directory as ctrQuake.3dsx and create 
 
 ## Credits
 Felipe Izzo (MasterFeizz) - Main developer
+
 Rinnegatamante - Brightness fix
 ## Thanks to
 Id Software - Source code of Quake
