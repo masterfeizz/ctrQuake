@@ -284,7 +284,6 @@ int main (int argc, char **argv)
 		osSetSpeedupEnable(true);
 
 	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
-	hidInit();
 	gfxSetDoubleBuffering(GFX_TOP, false);
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
 	gfxSet3D(false);

@@ -15,12 +15,11 @@ To use mods: place mod folder in the same directory as ctrQuake.3dsx and create 
 - [ ] Better input handling
 - [ ] Networking
 - [ ] Hardware rendering
-- [ ] Better sound processing
+- [x] Better sound processing ( Thanks to Rinnegatamante )
 
 ## Credits
 Felipe Izzo (MasterFeizz) - Main developer
-
-Rinnegatamante - Brightness fix
+Rinnegatamante - Sound enhancements
 ## Thanks to
 Id Software - Source code of Quake
 
