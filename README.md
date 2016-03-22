@@ -1,9 +1,9 @@
 # ctrQuake
 ctrQuake is a free, unofficial port of Quake for the Nintendo 3DS. It is fully playable, but still in early stages.
-## Installation
+## Installation guide
 - Follow the guide for running homebrew at [http://smealum.github.io/3ds/](http://smealum.github.io/3ds/)
-- Place `ctrQuake.3dsx` and `ctrQuake.smdh` on your SD card under the directory **/3ds/ctrQuake**
-- Place `id1` folder and any additional files into the same directory
+- Download the latest `ctrQuake.zip` from the [releases page](https://github.com/masterfeizz/ctrQuake/releases)
+- Extract `ctrQuake.zip` to the root of your SD card
 - Launch ctrQuake from the Homebrew Launcher
 
 ## Usage
