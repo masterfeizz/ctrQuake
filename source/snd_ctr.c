@@ -29,7 +29,36 @@ u32 SAMPLERATE = QUAKE_SAMPLERATE<<1;
 u32 *audiobuffer;
 ndspWaveBuf* waveBuf;
 u64 initial_tick;
+u64 csnd_pause_tick;//For fixing sound desync on resume
 int snd_inited;
+
+static aptHookCookie csndAptCookie;
+
+//Used to fix csnd problems when pressing the home button
+static void csndAptHook(APT_HookType hook, void* param)
+{
+	switch (hook)
+	{
+		case APTHOOK_ONWAKEUP:
+			break;
+		case APTHOOK_ONRESTORE:
+			initial_tick += (svcGetSystemTick() - csnd_pause_tick);
+			CSND_SetPlayState(0x08, 1);
+			CSND_UpdateInfo(0);
+			break;
+
+		case APTHOOK_ONSLEEP:
+			break;
+		case APTHOOK_ONSUSPEND:
+			CSND_SetPlayState(0x08, 0);
+			CSND_UpdateInfo(0);
+			csnd_pause_tick = svcGetSystemTick();
+			break;
+
+		default:
+			break;
+	}
+}
 
 // createDspBlock: Create a new block for DSP service
 void createDspBlock(ndspWaveBuf* waveBuf, u16 bps, u32 size, u8 loop, u32* data){
@@ -73,7 +102,8 @@ qboolean SNDDMA_Init(void)
 	shm->samplepos = 0;
 	shm->submission_chunk = 1;
 	shm->buffer = audiobuffer;
-	if (isDSP){
+	if (isDSP) {
+
 		ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 		ndspChnReset(0x08);
 		ndspChnWaveBufClear(0x08);
@@ -83,7 +113,13 @@ qboolean SNDDMA_Init(void)
 		waveBuf = (ndspWaveBuf*)calloc(1, sizeof(ndspWaveBuf));
 		createDspBlock(waveBuf, 2, DSP_BUFSIZE<<2, 1, audiobuffer);
 		ndspChnWaveBufAdd(0x08, waveBuf);
-	}else csndPlaySound(0x08, SOUND_LINEAR_INTERP | SOUND_REPEAT | SOUND_FORMAT_16BIT, QUAKE_SAMPLERATE, 1.0f, 1.0f, (u32*)audiobuffer, (u32*)audiobuffer, CSND_BUFSIZE<<1);
+	} else
+	{
+		csndPlaySound(0x08, SOUND_LINEAR_INTERP | SOUND_REPEAT | SOUND_FORMAT_16BIT, QUAKE_SAMPLERATE, 1.0f, 1.0f, (u32*)audiobuffer, (u32*)audiobuffer, CSND_BUFSIZE<<1);
+		#ifdef _3DS_CIA
+		aptHook(&csndAptCookie, csndAptHook, NULL);
+		#endif
+	}
 	
   initial_tick = svcGetSystemTick();
 
@@ -93,11 +129,11 @@ qboolean SNDDMA_Init(void)
 
 int SNDDMA_GetDMAPos(void)
 {
-  if(!snd_initialized)
-    return 0;
+	if(!snd_initialized)
+    	return 0;
 
-  u64 delta = (svcGetSystemTick() - initial_tick);
-  u64 samplepos = delta * (SAMPLERATE) / TICKS_PER_SEC;
+	u64 delta = (svcGetSystemTick() - initial_tick);
+	u64 samplepos = delta * (SAMPLERATE) / TICKS_PER_SEC;
 	shm->samplepos = samplepos;
 	return samplepos;
 }
@@ -113,6 +149,9 @@ void SNDDMA_Shutdown(void)
 		CSND_SetPlayState(0x08, 0);
 		CSND_UpdateInfo(0);
 		csndExit();
+		#ifdef _3DS_CIA
+		aptUnhook(&csndAptCookie);
+		#endif
 	}
 	linearFree(audiobuffer);
   }

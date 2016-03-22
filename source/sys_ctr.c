@@ -36,6 +36,8 @@ qboolean		isDedicated;
 u64 initialTime = 0;
 int hostInitialized = 0;
 
+static aptHookCookie sysAptCookie;
+
 /*
 ===============================================================================
 
@@ -179,8 +181,8 @@ void Sys_Error (char *error, ...)
 		if (kDown & KEY_START)
 			break;
 	}
-	Host_Shutdown();
-	exit(1);
+	if(hostInitialized)
+		Sys_Quit();
 }
 
 void Sys_Printf (char *fmt, ...)
@@ -197,6 +199,7 @@ void Sys_Printf (char *fmt, ...)
 
 void Sys_Quit (void)
 {
+	aptUnhook(&sysAptCookie);
 	Host_Shutdown();
 	gfxExit();
 	exit (0);
@@ -275,6 +278,27 @@ void Sys_LowFPPrecision (void)
 
 //=============================================================================
 
+//Used to properly exit the game when closing it from the home menu
+static void sysAptHook(APT_HookType hook, void* param)
+{
+	switch (hook)
+	{
+		case APTHOOK_ONEXIT:
+			Sys_Quit();
+			break;
+		default:
+			break;
+	}
+}
+
+void Sys_Init(void)
+{
+	hostInitialized = true;
+	aptHook(&sysAptCookie, sysAptHook, NULL);
+	Touch_Init();
+	Touch_DrawOverlay();
+}
+
 int main (int argc, char **argv)
 {
 	float		time, oldtime;
@@ -288,6 +312,11 @@ int main (int argc, char **argv)
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
 	gfxSet3D(false);
 	consoleInit(GFX_BOTTOM, NULL);
+
+	#ifdef _3DS_CIA
+		if(chdir("sdmc:/3ds/ctrQuake") != 0)
+			Sys_Error("Could not find folder: sdmc:/3ds/ctrQuake");
+	#endif
 
 	char *qargv[3];
 	int   qargc = 1;
@@ -312,10 +341,9 @@ int main (int argc, char **argv)
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 	Host_Init (&parms);
-	hostInitialized = true;
-	Touch_Init();
-	Touch_DrawOverlay();
-	//Sys_Init();
+	
+	Sys_Init();
+
 	oldtime = Sys_FloatTime() -0.1;
 	while (aptMainLoop())
 	{
