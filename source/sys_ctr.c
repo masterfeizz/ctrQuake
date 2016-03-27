@@ -313,7 +313,7 @@ void Sys_DefaultConfig(void)
 	Cbuf_AddText ("bind PADUP \"impulse 10\"\n");
 	Cbuf_AddText ("bind PADDOWN \"impulse 12\"\n");
 	Cbuf_AddText ("lookstrafe \"1.000000\"\n");
-	Cbuf_AddText ("lookspring \"1.000000\"\n");
+	Cbuf_AddText ("lookspring \"0.000000\"\n");
 	Cbuf_AddText ("gamma \"0.700000\"\n");
 
 }
