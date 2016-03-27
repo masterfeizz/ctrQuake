@@ -31,7 +31,7 @@ int	basewidth, baseheight;
 
 byte	*vid_buffer;
 short	*zbuffer;
-byte	surfcache[256*1024];
+byte	surfcache[512*1024];
 u16* fb;
 
 u16	d_8to16table[256];
@@ -81,6 +81,8 @@ void	VID_Init (unsigned char *palette)
 
 void	VID_Shutdown (void)
 {
+	free(vid_buffer);
+	free(zbuffer);
 }
 
 void	VID_Update (vrect_t *rects)

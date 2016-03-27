@@ -36,6 +36,8 @@ qboolean		isDedicated;
 u64 initialTime = 0;
 int hostInitialized = 0;
 
+char gameFolder[100];
+
 static aptHookCookie sysAptCookie;
 
 /*
@@ -183,6 +185,12 @@ void Sys_Error (char *error, ...)
 	}
 	if(hostInitialized)
 		Sys_Quit();
+
+	else
+	{
+		gfxExit();
+		exit (0);
+	}
 }
 
 void Sys_Printf (char *fmt, ...)
@@ -237,29 +245,32 @@ void CTR_SetKeys(u32 keys, u32 state){
 	if( keys & KEY_DRIGHT)
 		Key_Event(K_RIGHTARROW, state);
 	if( keys & KEY_Y)
-		Key_Event('y', state);
+		Key_Event(K_AUX4, state);
 	if( keys & KEY_X)
-		Key_Event('x', state);
+		Key_Event(K_AUX3, state);
 	if( keys & KEY_B)
-		Key_Event('b', state);
+		Key_Event(K_AUX2, state);
 	if( keys & KEY_A)
-		Key_Event('a', state);
+		Key_Event(K_AUX1, state);
 	if( keys & KEY_L)
-		Key_Event('l', state);
+		Key_Event(K_AUX5, state);
 	if( keys & KEY_R)
-		Key_Event('r', state);
+		Key_Event(K_AUX7, state);
 	if( keys & KEY_ZL)
-		Key_Event('k', state);
+		Key_Event(K_AUX6, state);
 	if( keys & KEY_ZR)
-		Key_Event('t', state);
+		Key_Event(K_AUX8, state);
 }
 
 
 void Sys_SendKeyEvents (void)
 {
 	hidScanInput();
+	
 	u32 kDown = hidKeysDown();
+
 	u32 kUp = hidKeysUp();
+
 	if(kDown)
 		CTR_SetKeys(kDown, true);
 	if(kUp)
@@ -291,12 +302,38 @@ static void sysAptHook(APT_HookType hook, void* param)
 	}
 }
 
+void Sys_DefaultConfig(void)
+{
+	Cbuf_AddText ("bind ABUTTON +right\n");
+	Cbuf_AddText ("bind BBUTTON +lookdown\n");
+	Cbuf_AddText ("bind XBUTTON +lookup\n");
+	Cbuf_AddText ("bind YBUTTON +left\n");
+	Cbuf_AddText ("bind LTRIGGER +jump\n");
+	Cbuf_AddText ("bind RTRIGGER +attack\n");
+	Cbuf_AddText ("bind PADUP \"impulse 10\"\n");
+	Cbuf_AddText ("bind PADDOWN \"impulse 12\"\n");
+	Cbuf_AddText ("lookstrafe \"1.000000\"\n");
+	Cbuf_AddText ("lookspring \"1.000000\"\n");
+	Cbuf_AddText ("gamma \"0.700000\"\n");
+
+}
+
 void Sys_Init(void)
 {
 	hostInitialized = true;
 	aptHook(&sysAptCookie, sysAptHook, NULL);
 	Touch_Init();
 	Touch_DrawOverlay();
+
+	char configPath[200];
+	sprintf(configPath, "%s/config.cfg", gameFolder);
+
+	FILE *config = fopen(configPath, "r");
+
+	if(!config)
+		Sys_DefaultConfig();
+	else
+		fclose(config);
 }
 
 int main (int argc, char **argv)
@@ -313,10 +350,16 @@ int main (int argc, char **argv)
 	gfxSet3D(false);
 	consoleInit(GFX_BOTTOM, NULL);
 
+	aptOpenSession();	    
+	APT_SetAppCpuTimeLimit(30);
+	aptCloseSession();
+
 	#ifdef _3DS_CIA
 		if(chdir("sdmc:/3ds/ctrQuake") != 0)
 			Sys_Error("Could not find folder: sdmc:/3ds/ctrQuake");
 	#endif
+
+	sprintf(gameFolder, "id1");
 
 	char *qargv[3];
 	int   qargc = 1;
@@ -327,6 +370,7 @@ int main (int argc, char **argv)
 			qargv[1] = "-game";
 			qargv[2] = argv[1];
 			qargc += 2;
+			sprintf(gameFolder, "%s", argv[1]);
 		}
 	}
 
@@ -341,6 +385,10 @@ int main (int argc, char **argv)
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 	Host_Init (&parms);
+
+	
+
+	
 	
 	Sys_Init();
 

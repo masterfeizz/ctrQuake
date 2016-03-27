@@ -1290,6 +1290,11 @@ void M_Options_Key (int k)
 			break;
 		case 2:
 			Cbuf_AddText ("exec default.cfg\n");
+
+			#ifdef _3DS
+			Sys_DefaultConfig();
+			#endif
+
 			break;
 		case 12:
 			M_Menu_Video_f ();
@@ -1632,6 +1637,30 @@ char *quitMessage [] =
   "        to quit?        ",
   "                        ",
 
+  #ifdef _3DS
+
+  " Man, I oughta smack you",
+  "   for trying to quit!  ",
+  "     Press A to get     ",
+  "      smacked out.      ",
+ 
+  " Press A to quit like a ",
+  "   big loser in life.   ",
+  "  Press B to stay proud ",
+  "    and successful!     ",
+ 
+  "   If you press A to    ",
+  "  quit, I will summon   ",
+  "  Satan all over your   ",
+  "      hard drive!       ",
+ 
+  "  Um, Asmodeus dislikes ",
+  " his children trying to ",
+  " quit. Press A to return",
+  "   to your Tinkertoys.  ",
+
+  #else
+
   " Man, I oughta smack you",
   "   for trying to quit!  ",
   "     Press Y to get     ",
@@ -1651,6 +1680,8 @@ char *quitMessage [] =
   " his children trying to ",
   " quit. Press Y to return",
   "   to your Tinkertoys.  ",
+
+  #endif
  
   "  If you quit now, I'll ",
   "  throw a blanket-party ",
@@ -1676,6 +1707,9 @@ void M_Quit_Key (int key)
 {
 	switch (key)
 	{
+	#ifdef _3DS
+	case K_AUX2:
+	#endif
 	case K_ESCAPE:
 	case 'n':
 	case 'N':
@@ -1691,6 +1725,9 @@ void M_Quit_Key (int key)
 		}
 		break;
 
+	#ifdef _3DS
+	case K_AUX1:
+	#endif
 	case 'Y':
 	case 'y':
 		key_dest = key_console;

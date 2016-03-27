@@ -46,14 +46,20 @@ void IN_Commands (void)
 
 void IN_Move (usercmd_t *cmd)
 {
-  if(hidKeysHeld() & KEY_TOUCH){
+
+  if(hidKeysDown() & KEY_TOUCH){
+    hidTouchRead(&touch);
+    oldtouch = touch;
+  }
+
+  else if(hidKeysHeld() & KEY_TOUCH){
     hidTouchRead(&touch);
     touch.px =  (touch.px + oldtouch.px) / 2;
     touch.py =  (touch.py + oldtouch.py) / 2;
     cl.viewangles[YAW] -= (touch.px - oldtouch.px) * sensitivity.value/2;
-    if(in_mlook.state & 1)
-      cl.viewangles[PITCH] += (touch.py - oldtouch.py) * sensitivity.value/2;
+    cl.viewangles[PITCH] += (touch.py - oldtouch.py) * sensitivity.value/2;
     oldtouch = touch;
+    V_StopPitchDrift ();
   }
 
   hidCircleRead(&circlepad);
@@ -83,6 +89,7 @@ void IN_Move (usercmd_t *cmd)
     cl.viewangles[PITCH] -= cstick.dy;
   }
 
-  V_StopPitchDrift ();
+  if(!lookspring.value)
+    V_StopPitchDrift ();  
 
 }
