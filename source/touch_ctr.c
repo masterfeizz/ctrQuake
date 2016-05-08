@@ -135,15 +135,15 @@ void Touch_KeyboardToggle()
 
 void Touch_ProcessTap()
 {
-  if(touch.px > 268 && touch.py > 14 && touch.py < 226 )
-    Touch_TopBarTap();
+  if(touch.px > 268 && touch.py > 14 && touch.py < 226 && !keyboardToggled)
+    Touch_SideBarTap();
   else if (touch.py > 62 && touch.py < 188 && touch.px > 12 && touch.px < 308 && keyboardToggled)
     Touch_KeyboardTap();
   else if (touch.py > 214 && touch.px > 142 && touch.px < 178)
     Touch_KeyboardToggle();
 }
 
-void Touch_TopBarTap()
+void Touch_SideBarTap()
 {
   uint16_t y = (touch.py - 14)/42;
   lastKey = K_AUX9 + y;
