@@ -324,16 +324,6 @@ void Sys_Init(void)
 	aptHook(&sysAptCookie, sysAptHook, NULL);
 	Touch_Init();
 	Touch_DrawOverlay();
-
-	char configPath[200];
-	sprintf(configPath, "%s/config.cfg", gameFolder);
-
-	FILE *config = fopen(configPath, "r");
-
-	if(!config)
-		Sys_DefaultConfig();
-	else
-		fclose(config);
 }
 
 int main (int argc, char **argv)
@@ -350,29 +340,10 @@ int main (int argc, char **argv)
 	gfxSet3D(false);
 	consoleInit(GFX_BOTTOM, NULL);
 
-	aptOpenSession();	    
-	APT_SetAppCpuTimeLimit(30);
-	aptCloseSession();
-
 	#ifdef _3DS_CIA
 		if(chdir("sdmc:/3ds/ctrQuake") != 0)
 			Sys_Error("Could not find folder: sdmc:/3ds/ctrQuake");
 	#endif
-
-	sprintf(gameFolder, "id1");
-
-	char *qargv[3];
-	int   qargc = 1;
-
-	qargv[0] = "";
-	if(argc>1){
-		if(strlen(argv[1]) != 0){
-			qargv[1] = "-game";
-			qargv[2] = argv[1];
-			qargc += 2;
-			sprintf(gameFolder, "%s", argv[1]);
-		}
-	}
 
 	static quakeparms_t    parms;
 
@@ -380,15 +351,11 @@ int main (int argc, char **argv)
 	parms.membase = malloc (parms.memsize);
 	parms.basedir = ".";
 
-	COM_InitArgv (qargc, qargv);
+	COM_InitArgv (argc, argv);
 
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 	Host_Init (&parms);
-
-	
-
-	
 	
 	Sys_Init();
 

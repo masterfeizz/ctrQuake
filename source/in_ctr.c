@@ -44,6 +44,8 @@ void IN_Commands (void)
 {
 }
 
+extern uint8_t keyboardToggled;
+
 void IN_Move (usercmd_t *cmd)
 {
 
@@ -52,7 +54,7 @@ void IN_Move (usercmd_t *cmd)
     oldtouch = touch;
   }
 
-  else if(hidKeysHeld() & KEY_TOUCH){
+  else if(hidKeysHeld() & KEY_TOUCH && !keyboardToggled){
     hidTouchRead(&touch);
     touch.px =  (touch.px + oldtouch.px) / 2;
     touch.py =  (touch.py + oldtouch.py) / 2;

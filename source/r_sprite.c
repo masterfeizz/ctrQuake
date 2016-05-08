@@ -145,8 +145,10 @@ void R_SetupAndDrawSprite ()
 	dot = DotProduct (r_spritedesc.vpn, modelorg);
 
 // backface cull
-	if (dot >= 0)
+	if (dot >= 0){
+		free(outverts);
 		return;
+	}
 
 // build the sprite poster in worldspace
 	VectorScale (r_spritedesc.vright, r_spritedesc.pspriteframe->right, right);
@@ -187,8 +189,10 @@ void R_SetupAndDrawSprite ()
 	for (i=0 ; i<4 ; i++)
 	{
 		nump = R_ClipSpriteFace (nump, &view_clipplanes[i]);
-		if (nump < 3)
+		if (nump < 3){
+			free(outverts);
 			return;
+		}
 		if (nump >= MAXWORKINGVERTS)
 			Sys_Error("R_SetupAndDrawSprite: too many points");
 	}
