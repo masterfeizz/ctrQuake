@@ -1,5 +1,5 @@
 <shortcut>
 	<name>Team Fortress</name>
 	<executable>/3ds/ctrQuake/ctrQuake.3dsx</executable>
-	<arg>fortress</arg>
+	<arg>-game fortress</arg>
 </shortcut>
