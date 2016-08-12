@@ -67,11 +67,11 @@ void	VID_Init (unsigned char *palette)
 
 	vid.maxwarpwidth = vid.width = vid.conwidth = basewidth;
 	vid.maxwarpheight = vid.height = vid.conheight = baseheight;
-	vid.aspect = 1.0;
-	vid.numpages = 1;
+	vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
+	vid.numpages = 2;
 	vid.colormap = host_colormap;
 	vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
-	vid.buffer = vid.conbuffer = vid_buffer;
+	vid.buffer = vid.conbuffer = vid.direct = vid_buffer;
 	vid.rowbytes = vid.conrowbytes = basewidth;
 	VID_SetPalette(palette);
 	d_pzbuffer = zbuffer;
