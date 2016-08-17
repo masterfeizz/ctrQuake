@@ -167,6 +167,8 @@ void CL_EstablishConnection (char *host)
 	cls.demonum = -1;			// not in the demo loop now
 	cls.state = ca_connected;
 	cls.signon = 0;				// need all the signon messages before playing
+
+	CL_KeepaliveMessage();
 }
 
 /*
