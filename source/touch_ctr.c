@@ -115,9 +115,7 @@ void Touch_Update(){
     tick = Sys_FloatTime();
   }
 
-  //If touchscreen is released in certain amount of time it's a tap
   if(hidKeysUp() & KEY_TOUCH){
-    if((Sys_FloatTime() - tick) < 1.0) //FIX ME: find optimal timeframe
       Touch_ProcessTap();
   }
 }
