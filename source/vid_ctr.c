@@ -88,8 +88,8 @@ void	VID_Shutdown (void)
 void	VID_Update (vrect_t *rects)
 {
 	int x,y;
-	for(x=0; x<basewidth; x++){
-		for(y=0; y<baseheight;y++){
+	for(x = rects->x; x < rects->width; x++){
+		for(y = rects->x; y < rects->height; y++){
 			fb[((x*240) + (239 -y))] = d_8to16table[vid.buffer[y*basewidth + x]];
 		}
 	}
