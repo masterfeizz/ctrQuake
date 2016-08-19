@@ -1,5 +1,5 @@
 # ctrQuake
-ctrQuake is a free, unofficial port of Quake for the Nintendo 3DS. It is fully playable, but still in early stages.
+ctrQuake is a free, unofficial port of Quake for the Nintendo 3DS.
 
 ## Installation guide
 - Follow the guide for running homebrew at [http://smealum.github.io/3ds/](http://smealum.github.io/3ds/)
@@ -24,7 +24,7 @@ To use mods: place mod folder in the same directory as ctrQuake.3dsx and create 
 
 ## TODO List
 - [ ] Better input handling
-- [ ] Networking
+- [x] Networking
 - [ ] Hardware rendering
 - [x] Better sound processing ( Thanks to Rinnegatamante )
 
