@@ -83,6 +83,10 @@ extern int m_state;
 extern qboolean m_return_onerror;
 extern char m_return_reason[32];
 
+#ifdef _3DS
+int ctrport_fix = 5001;
+#endif
+
 
 #ifdef DEBUG
 char *StrAddr (struct qsockaddr *addr)
@@ -1052,7 +1056,12 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 	}
 
 	// allocate a network socket
-	newsock = dfunc.OpenSocket(0);
+	#ifdef _3DS
+	newsock = dfunc.OpenSocket (ctrport_fix);
+	ctrport_fix++;
+	#else
+	newsock = dfunc.OpenSocket (0);
+	#endif
 	if (newsock == -1)
 	{
 		NET_FreeQSocket(sock);
@@ -1210,8 +1219,6 @@ void Datagram_SearchForHosts (qboolean xmit)
 	}
 }
 
-//Temporary fix for 3DS
-int ctrport_fix = 5001;
 static qsocket_t *_Datagram_Connect (char *host)
 {
 	struct qsockaddr sendaddr;
@@ -1228,8 +1235,12 @@ static qsocket_t *_Datagram_Connect (char *host)
 	if (dfunc.GetAddrFromName(host, &sendaddr) == -1)
 		return NULL;
 
+	#ifdef _3DS
 	newsock = dfunc.OpenSocket (ctrport_fix);
 	ctrport_fix++;
+	#else
+	newsock = dfunc.OpenSocket (0);
+	#endif
 	if (newsock == -1)
 		return NULL;
 

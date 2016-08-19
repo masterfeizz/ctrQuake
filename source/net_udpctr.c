@@ -132,6 +132,7 @@ void UDP_Shutdown (void)
 {
 	UDP_Listen (false);
 	UDP_CloseSocket (net_controlsocket);
+	socExit();
 }
 
 //=============================================================================
@@ -162,8 +163,8 @@ int UDP_OpenSocket (int port)
 	int newsocket;
 	struct sockaddr_in address;
 	qboolean _true = true;
-  int yes = 1;
-  int rc;
+	  int yes = 1;
+	  int rc;
 
 	if ((newsocket = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 		return -1;
@@ -193,8 +194,8 @@ int UDP_CloseSocket (int socket)
 {
 	if (socket == net_broadcastsocket)
 		net_broadcastsocket = 0;
-	close (socket);
-	return socExit();
+
+	return close (socket);
 }
 
 
@@ -266,15 +267,14 @@ int UDP_Connect (int socket, struct qsockaddr *addr)
 
 int UDP_CheckNewConnections (void)
 {
-	unsigned long	available;
-	char buf[4];
-
+	char buf[4096];
+	
 	if (net_acceptsocket == -1)
 		return -1;
 
-	if (recvfrom (net_acceptsocket, buf, 4, 0x10000000, NULL, NULL) > 0)
+	if (recvfrom(net_acceptsocket, buf, 4096, MSG_PEEK, NULL, NULL) > 0)
 		return net_acceptsocket;
-
+		
 	return -1;
 }
 
@@ -295,16 +295,9 @@ int UDP_Read (int socket, byte *buf, int len, struct qsockaddr *addr)
 
 int UDP_MakeSocketBroadcastCapable (int socket)
 {
-	int				i = 1;
-
-	//This will fail on 3DS with current version of libctru
-	// make this socket broadcast capable
-	//if (setsockopt(socket, SOL_SOCKET, SO_BROADCAST, &i, sizeof(i)) < 0)
-	//	return -1;
-	net_broadcastsocket = socket;
-
-	return 0;
+	return -1;
 }
+
 
 //=============================================================================
 
