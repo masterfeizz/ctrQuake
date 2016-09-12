@@ -171,11 +171,13 @@ void D_CalcGradients (msurface_t *pface)
 D_DrawSurfaces
 ==============
 */
+
+surfcache_t *pcurrentcache;
+
 void D_DrawSurfaces (void)
 {
 	surf_t			*s;
 	msurface_t		*pface;
-	surfcache_t		*pcurrentcache;
 	vec3_t			world_transformed_modelorg;
 	vec3_t			local_modelorg;
 

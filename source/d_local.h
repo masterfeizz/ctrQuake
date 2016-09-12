@@ -76,6 +76,9 @@ void D_DrawZSpans (espan_t *pspans);
 void Turbulent8 (espan_t *pspan);
 void D_SpriteDrawSpans (sspan_t *pspan);
 
+void D_DrawSpans16Qb(espan_t *pspans);
+void D_DrawSpans16QbDither(espan_t *pspans);
+
 void D_DrawSkyScans8 (espan_t *pspan);
 void D_DrawSkyScans16 (espan_t *pspan);
 

@@ -247,6 +247,371 @@ void Turbulent8 (espan_t *pspan)
 }
 
 
+/*
+   =============
+   D_DrawSpans16
+FIXME: actually make this subdivide by 16 instead of 8!!!  qb:  OK!!!!
+=============
+*/
+
+            /*==============================================
+            //unrolled- mh, MK, qbism
+            //============================================*/
+
+   static int          count, spancount;
+   static byte         *pbase, *pdest;
+   static fixed16_t    s, t, snext, tnext, sstep, tstep;
+   static float        sdivz, tdivz, zi, z, du, dv, spancountminus1;
+   static float        sdivzstepu, tdivzstepu, zistepu;
+
+   int dither_kernel[2][2][2] =
+{
+   {
+      {16384,0},
+      {49152,32768}
+   }
+   ,
+      {
+         {32768,49152},
+         {0,16384}
+      }
+};
+
+#define SOLID(i) pdest[i] = pbase[(s >> 16) + (t >> 16) * cachewidth]
+#define DITHERED_SOLID(i) pdest[i] = pbase[idiths + iditht * cachewidth]
+#define DITHERED_SOLID_B(i) pdest[i] = pbase[idiths_b + iditht_b * cachewidth]
+
+#define DITHERED_SOLID_B_UPDATE() \
+   idiths_b = (s + dither_val_s_b) >> 16; iditht_b = (t + dither_val_t_b) >> 16; \
+idiths_b = idiths_b ? ((idiths_b) - 1) : idiths_b; \
+iditht_b = iditht_b ? ((iditht_b) - 1) : iditht_b
+
+#define DITHERED_SOLID_UPDATE() \
+   idiths = (s + dither_val_s) >> 16; iditht = (t + dither_val_t) >> 16; \
+idiths = idiths ? ((idiths) - 1) : idiths; \
+iditht = iditht ? ((iditht) - 1) : iditht
+
+//qbism: pointer to pbase and macroize idea from mankrip
+#define WRITEPDEST(i) { pdest[i] = *(pbase + (s >> 16) + (t >> 16) * cachewidth); s+=sstep; t+=tstep;}
+
+extern surfcache_t		*pcurrentcache;
+
+void D_DrawSpans16Qb(espan_t *pspan) //qb: up it from 8 to 16.  This + unroll = big speed gain!
+{
+   sstep = 0;   // keep compiler happy
+   tstep = 0;   // ditto
+
+   pbase = (byte *)cacheblock;
+   sdivzstepu = d_sdivzstepu * 16;
+   tdivzstepu = d_tdivzstepu * 16;
+   zistepu = d_zistepu * 16;
+
+   do
+   {
+      pdest = (byte *)((byte *)d_viewbuffer + (screenwidth * pspan->v) + pspan->u);
+      count = pspan->count >> 4;
+
+      spancount = pspan->count % 16;
+
+      // calculate the initial s/z, t/z, 1/z, s, and t and clamp
+      du = (float)pspan->u;
+      dv = (float)pspan->v;
+
+      sdivz = d_sdivzorigin + dv*d_sdivzstepv + du*d_sdivzstepu;
+      tdivz = d_tdivzorigin + dv*d_tdivzstepv + du*d_tdivzstepu;
+      zi = d_ziorigin + dv*d_zistepv + du*d_zistepu;
+      z = (float)0x10000 / zi;   // prescale to 16.16 fixed-point
+
+      s = (int)(sdivz * z) + sadjust;
+      if (s < 0) s = 0;
+      else if (s > bbextents) s = bbextents;
+
+      t = (int)(tdivz * z) + tadjust;
+      if (t < 0) t = 0;
+      else if (t > bbextentt) t = bbextentt;
+
+      while (count-- > 0) // Manoel Kasimier
+      {
+         sdivz += sdivzstepu;
+         tdivz += tdivzstepu;
+         zi += zistepu;
+         z = (float)0x10000 / zi;   // prescale to 16.16 fixed-point
+
+         snext = (int)(sdivz * z) + sadjust;
+         if (snext < 16) snext = 16;
+         else if (snext > bbextents) snext = bbextents;
+
+         tnext = (int)(tdivz * z) + tadjust;
+         if (tnext < 16) tnext = 16;
+         else if (tnext > bbextentt) tnext = bbextentt;
+
+         sstep = (snext - s) >> 4;
+         tstep = (tnext - t) >> 4;
+         pdest += 16;
+
+         WRITEPDEST(-16);
+         WRITEPDEST(-15);
+         WRITEPDEST(-14);
+         WRITEPDEST(-13);
+         WRITEPDEST(-12);
+         WRITEPDEST(-11);
+         WRITEPDEST(-10);
+         WRITEPDEST(-9);
+         WRITEPDEST(-8);
+         WRITEPDEST(-7);
+         WRITEPDEST(-6);
+         WRITEPDEST(-5);
+         WRITEPDEST(-4);
+         WRITEPDEST(-3);
+         WRITEPDEST(-2);
+         WRITEPDEST(-1);
+
+         s = snext;
+         t = tnext;
+      }
+      if (spancount > 0)
+      {
+         spancountminus1 = (float)(spancount - 1);
+         sdivz += d_sdivzstepu * spancountminus1;
+         tdivz += d_tdivzstepu * spancountminus1;
+         zi += d_zistepu * spancountminus1;
+         z = (float)0x10000 / zi;   // prescale to 16.16 fixed-point
+
+         snext = (int)(sdivz * z) + sadjust;
+         if (snext < 16) snext = 16;
+         else if (snext > bbextents) snext = bbextents;
+
+         tnext = (int)(tdivz * z) + tadjust;
+         if (tnext < 16) tnext = 16;
+         else if (tnext > bbextentt) tnext = bbextentt;
+
+         if (spancount > 1)
+         {
+            sstep = (snext - s) / (spancount - 1);
+            tstep = (tnext - t) / (spancount - 1);
+         }
+
+         pdest += spancount;
+
+         switch (spancount)
+         {
+            case 16:
+               WRITEPDEST(-16);
+            case 15:
+               WRITEPDEST(-15);
+            case 14:
+               WRITEPDEST(-14);
+            case 13:
+               WRITEPDEST(-13);
+            case 12:
+               WRITEPDEST(-12);
+            case 11:
+               WRITEPDEST(-11);
+            case 10:
+               WRITEPDEST(-10);
+            case  9:
+               WRITEPDEST(-9);
+            case  8:
+               WRITEPDEST(-8);
+            case  7:
+               WRITEPDEST(-7);
+            case  6:
+               WRITEPDEST(-6);
+            case  5:
+               WRITEPDEST(-5);
+            case  4:
+               WRITEPDEST(-4);
+            case  3:
+               WRITEPDEST(-3);
+            case  2:
+               WRITEPDEST(-2);
+            case  1:
+               WRITEPDEST(-1);
+               break;
+         }
+      }
+   } while ((pspan = pspan->pnext) != NULL);
+}
+
+void D_DrawSpans16QbDither (espan_t *pspan) //qbism up it from 8 to 16. This + unroll = big speed gain!
+{
+   int spancount;
+   uint8_t *pbase;
+   fixed16_t snext, tnext, sstep, tstep;
+   float sdivzstepu, tdivzstepu, zistepu;
+
+   // mipmaps shouldn't be dithered
+   if (pcurrentcache->mipscale < 1.0f)
+   {
+      D_DrawSpans16Qb(pspan);
+      return;
+   }
+
+   sstep = 0; // keep compiler happy
+   tstep = 0; // ditto
+
+   pbase      = (uint8_t*)cacheblock;
+   sdivzstepu = d_sdivzstepu * 16;
+   tdivzstepu = d_tdivzstepu * 16;
+   zistepu    = d_zistepu * 16;
+
+   do
+   {
+      fixed16_t t;
+      int count = pspan->count;
+      // calculate the initial s/z, t/z, 1/z, s, and t and clamp
+      float du = (float)pspan->u;
+      float dv = (float)pspan->v;
+
+      float sdivz = d_sdivzorigin + dv*d_sdivzstepv + du*d_sdivzstepu;
+      float tdivz = d_tdivzorigin + dv*d_tdivzstepv + du*d_tdivzstepu;
+      float zi = d_ziorigin + dv*d_zistepv + du*d_zistepu;
+      float z = (float)0x10000 / zi; // prescale to 16.16 fixed-point
+
+      fixed16_t s = (int)(sdivz * z) + sadjust;
+
+      uint8_t *pdest = (uint8_t*)((byte *)d_viewbuffer +
+            (screenwidth * pspan->v) + pspan->u);
+
+      if (s > bbextents)
+         s = bbextents;
+      else if (s < 0)
+         s = 0;
+
+      t = (int)(tdivz * z) + tadjust;
+      if (t > bbextentt)
+         t = bbextentt;
+      else if (t < 0)
+         t = 0;
+
+      do
+      {
+         // calculate s and t at the far end of the span
+         if (count >= 16)
+            spancount = 16;
+         else
+            spancount = count;
+
+         count -= spancount;
+
+         if (count)
+         {
+            // calculate s/z, t/z, zi->fixed s and t at far end of span,
+            // calculate s and t steps across span by shifting
+            sdivz += sdivzstepu;
+            tdivz += tdivzstepu;
+            zi += zistepu;
+            z = (float)0x10000 / zi; // prescale to 16.16 fixed-point
+
+            snext = (int)(sdivz * z) + sadjust;
+            if (snext > bbextents)
+               snext = bbextents;
+            else if (snext <= 16)
+               snext = 16; // prevent round-off error on <0 steps from
+            // from causing overstepping & running off the
+            // edge of the texture
+
+            tnext = (int)(tdivz * z) + tadjust;
+            if (tnext > bbextentt)
+               tnext = bbextentt;
+            else if (tnext < 16)
+               tnext = 16; // guard against round-off error on <0 steps
+
+            sstep = (snext - s) >> 4;
+            tstep = (tnext - t) >> 4;
+         }
+         else
+         {
+            // calculate s/z, t/z, zi->fixed s and t at last pixel in span (so
+            // can't step off polygon), clamp, calculate s and t steps across
+            // span by division, biasing steps low so we don't run off the
+            // texture
+            float spancountminus1 = (float)(spancount - 1);
+            sdivz += d_sdivzstepu * spancountminus1;
+            tdivz += d_tdivzstepu * spancountminus1;
+            zi += d_zistepu * spancountminus1;
+            z = (float)0x10000 / zi; // prescale to 16.16 fixed-point
+            snext = (int)(sdivz * z) + sadjust;
+            if (snext > bbextents)
+               snext = bbextents;
+            else if (snext < 16)
+               snext = 16; // prevent round-off error on <0 steps from
+            // from causing overstepping & running off the
+            // edge of the texture
+
+            tnext = (int)(tdivz * z) + tadjust;
+            if (tnext > bbextentt)
+               tnext = bbextentt;
+            else if (tnext < 16)
+               tnext = 16; // guard against round-off error on <0 steps
+
+            if (spancount > 1)
+            {
+               sstep = (snext - s) / (spancount - 1);
+               tstep = (tnext - t) / (spancount - 1);
+            }
+         }
+
+         {
+            int X = (pspan->u + spancount) & 1;
+            int Y = (pspan->v) & 1;
+            int dither_val_s = dither_kernel[X][Y][0];
+            int dither_val_t = dither_kernel[X][Y][1];
+            int dither_val_s_b = dither_kernel[!X][Y][0];
+            int dither_val_t_b = dither_kernel[!X][Y][1];
+            int idiths, iditht, idiths_b, iditht_b;
+
+            DITHERED_SOLID_UPDATE();
+            DITHERED_SOLID_B_UPDATE();
+
+            //qbism- Duff's Device loop unroll per mh.
+            pdest += spancount;
+            switch (spancount)
+            {
+               case 16: DITHERED_SOLID(-16); s += sstep; t += tstep;
+                        DITHERED_SOLID_B_UPDATE();
+               case 15: DITHERED_SOLID_B(-15); s += sstep; t += tstep;
+                        DITHERED_SOLID_UPDATE();
+               case 14: DITHERED_SOLID(-14); s += sstep; t += tstep;
+                        DITHERED_SOLID_B_UPDATE();
+               case 13: DITHERED_SOLID_B(-13); s += sstep; t += tstep;
+                        DITHERED_SOLID_UPDATE();
+               case 12: DITHERED_SOLID(-12); s += sstep; t += tstep;
+                        DITHERED_SOLID_B_UPDATE();
+               case 11: DITHERED_SOLID_B(-11); s += sstep; t += tstep;
+                        DITHERED_SOLID_UPDATE();
+               case 10: DITHERED_SOLID(-10); s += sstep; t += tstep;
+                        DITHERED_SOLID_B_UPDATE();
+               case 9: DITHERED_SOLID_B(-9); s += sstep; t += tstep;
+                       DITHERED_SOLID_UPDATE();
+               case 8: DITHERED_SOLID(-8); s += sstep; t += tstep;
+                       DITHERED_SOLID_B_UPDATE();
+               case 7: DITHERED_SOLID_B(-7); s += sstep; t += tstep;
+                       DITHERED_SOLID_UPDATE();
+               case 6: DITHERED_SOLID(-6); s += sstep; t += tstep;
+                       DITHERED_SOLID_B_UPDATE();
+               case 5: DITHERED_SOLID_B(-5); s += sstep; t += tstep;
+                       DITHERED_SOLID_UPDATE();
+               case 4: DITHERED_SOLID(-4); s += sstep; t += tstep;
+                       DITHERED_SOLID_B_UPDATE();
+               case 3: DITHERED_SOLID_B(-3); s += sstep; t += tstep;
+                       DITHERED_SOLID_UPDATE();
+               case 2: DITHERED_SOLID(-2); s += sstep; t += tstep;
+                       DITHERED_SOLID_B_UPDATE();
+               case 1: DITHERED_SOLID_B(-1); s += sstep; t += tstep;
+                       DITHERED_SOLID_UPDATE();
+            }
+         }
+
+         s = snext;
+         t = tnext;
+
+      } while (count > 0);
+
+   } while ((pspan = pspan->pnext) != NULL);
+}
+
+
 #if	!id386
 
 /*

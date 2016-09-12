@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 cvar_t	d_subdiv16 = {"d_subdiv16", "1"};
 cvar_t	d_mipcap = {"d_mipcap", "0"};
 cvar_t	d_mipscale = {"d_mipscale", "1"};
+cvar_t dither_filter = { "dither_filter", "0" };
 
 surfcache_t		*d_initial_rover;
 qboolean		d_roverwrapped;
@@ -53,6 +54,7 @@ void D_Init (void)
 	Cvar_RegisterVariable (&d_subdiv16);
 	Cvar_RegisterVariable (&d_mipcap);
 	Cvar_RegisterVariable (&d_mipscale);
+	Cvar_RegisterVariable (&dither_filter);
 
 	r_drawpolys = false;
 	r_worldpolysbacktofront = false;
@@ -123,6 +125,8 @@ void D_SetupFrame (void)
 {
 	int		i;
 
+	cvar_t *cvar = Cvar_FindVar("dither_filter");
+
 	if (r_dowarp)
 		d_viewbuffer = r_warpbuffer;
 	else
@@ -151,7 +155,10 @@ void D_SetupFrame (void)
 				else
 					d_drawspans = D_DrawSpans8;
 #else
-				d_drawspans = D_DrawSpans8;
+				if (cvar && cvar->value == 1.0f)
+        			d_drawspans = D_DrawSpans16QbDither;
+     			else
+      				d_drawspans = D_DrawSpans16Qb;
 #endif
 
 	d_aflatcolor = 0;
