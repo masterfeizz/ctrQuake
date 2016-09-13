@@ -1036,11 +1036,7 @@ again:
 //=============================================================================
 /* OPTIONS MENU */
 
-#ifdef _WIN32
 #define	OPTIONS_ITEMS	14
-#else
-#define	OPTIONS_ITEMS	13
-#endif
 
 #define	SLIDER_RANGE	10
 
@@ -1060,6 +1056,8 @@ void M_Menu_Options_f (void)
 #endif
 }
 
+extern  cvar_t  dither_filter;
+extern	cvar_t	crosshair;
 
 void M_AdjustSliders (int dir)
 {
@@ -1155,6 +1153,14 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("lookstrafe", !lookstrafe.value);
 		break;
 
+	case 12:
+		Cvar_SetValue ("dither_filter", !dither_filter.value);
+		break;
+
+	case 13:
+		Cvar_SetValue ("crosshair", !crosshair.value);
+		break;
+
 #ifdef _WIN32
 	case 13:	// _windowed_mouse
 		Cvar_SetValue ("_windowed_mouse", !_windowed_mouse.value);
@@ -1196,8 +1202,8 @@ void M_DrawCheckbox (int x, int y, int on)
 void M_Options_Draw (void)
 {
 	float		r;
-
 	qpic_t	*p;
+	cvar_t *cvar = NULL;
 	
 	p = Draw_CachePic ("gfx/p_option.lmp");
 	M_DrawPic ( (320-p->width)/2, 4, p);
@@ -1264,6 +1270,12 @@ void M_Options_Draw (void)
 	#endif
 	M_DrawCheckbox (220, 120, lookstrafe.value);
 
+	M_Print (16, 128, "             Dithering");
+	M_DrawCheckbox (220, 128, dither_filter.value);
+
+	M_Print(16, 136, "             Crosshair");
+   	M_DrawCheckbox(220, 136, crosshair.value);
+
 	if (vid_menudrawfn)
 		M_Print (16, 128, "         Video Options");
 
@@ -1307,9 +1319,6 @@ void M_Options_Key (int k)
 			#endif
 
 			break;
-		case 12:
-			M_Menu_Video_f ();
-			break;
 		default:
 			M_AdjustSliders (1);
 			break;
@@ -1326,7 +1335,7 @@ void M_Options_Key (int k)
 	case K_DOWNARROW:
 		S_LocalSound ("misc/menu1.wav");
 		options_cursor++;
-		if (options_cursor >= OPTIONS_ITEMS)
+		if (options_cursor > OPTIONS_ITEMS)
 			options_cursor = 0;
 		break;
 
@@ -1337,14 +1346,6 @@ void M_Options_Key (int k)
 	case K_RIGHTARROW:
 		M_AdjustSliders (1);
 		break;
-	}
-
-	if (options_cursor == 12 && vid_menudrawfn == NULL)
-	{
-		if (k == K_UPARROW)
-			options_cursor = 11;
-		else
-			options_cursor = 0;
 	}
 
 #ifdef _WIN32
