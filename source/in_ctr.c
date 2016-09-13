@@ -30,10 +30,13 @@ circlePosition cstick;
 circlePosition circlepad;
 touchPosition oldtouch, touch;
 
+cvar_t  csensitivity = {"csensitivity","3", true};
+cvar_t  circlepadsensitivity = {"circlepadsensitivity","10.0", true};
+
 void IN_Init (void)
 {
-  if ( COM_CheckParm ("-nomouse") )
-    return;
+  Cvar_RegisterVariable (&csensitivity);
+  Cvar_RegisterVariable (&circlepadsensitivity);
 }
 
 void IN_Shutdown (void)
@@ -48,6 +51,13 @@ extern uint8_t keyboardToggled;
 
 void IN_Move (usercmd_t *cmd)
 {
+
+  float speed;
+
+  if (in_speed.state & 1)
+    speed = cl_movespeedkey.value;
+  else
+    speed = 1;
 
   if(hidKeysDown() & KEY_TOUCH){
     hidTouchRead(&touch);
@@ -67,13 +77,15 @@ void IN_Move (usercmd_t *cmd)
   hidCircleRead(&circlepad);
   //CirclePad deadzone to fix ghost movements
   if(abs(circlepad.dy) > 15){
-    cmd->forwardmove += m_forward.value * circlepad.dy * 2;
+    float y_value = circlepad.dy / 156.0f;
+    cmd->forwardmove += (y_value * circlepadsensitivity.value) * speed * cl_forwardspeed.value;
   }
   if(abs(circlepad.dx) > 15){
+    float x_value = circlepad.dx / 156.0f;
     if((in_strafe.state & 1) || (lookstrafe.value))
-      cmd->sidemove += m_side.value * circlepad.dx * 2;
+      cmd->sidemove += (x_value * circlepadsensitivity.value) * speed * cl_sidespeed.value;
     else
-      cl.viewangles[YAW] -= m_side.value * circlepad.dx * 0.03;
+      cl.viewangles[YAW] -= m_side.value * x_value;
   }
 
   //cStick is only available on N3DS... Until libctru implements support for circlePad Pro

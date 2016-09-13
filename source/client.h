@@ -270,6 +270,7 @@ extern	cvar_t	m_side;
 
 #ifdef _3DS
 extern	cvar_t	csensitivity;
+extern	cvar_t	circlepadsensitivity;
 #endif
 
 

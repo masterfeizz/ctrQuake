@@ -910,10 +910,6 @@ void Host_Init (quakeparms_t *parms)
 #endif
 	}
 
-	#ifdef _3DS
-		Sys_DefaultConfig();
-	#endif
-
 	Cbuf_InsertText ("exec quake.rc\n");
 
 	Hunk_AllocName (0, "-HOST_HUNKLEVEL-");

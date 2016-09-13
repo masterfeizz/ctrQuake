@@ -1091,7 +1091,7 @@ void M_AdjustSliders (int dir)
 			sensitivity.value = 11;
 		Cvar_SetValue ("sensitivity", sensitivity.value);
 		break;
-	#ifdef _3DS
+#ifdef _3DS
 	case 6:	// mouse speed
 		csensitivity.value += dir * 0.5;
 		if (csensitivity.value < 1)
@@ -1100,7 +1100,15 @@ void M_AdjustSliders (int dir)
 			csensitivity.value = 11;
 		Cvar_SetValue ("csensitivity", csensitivity.value);
 		break;
-	#else
+	case 7:	// mouse speed
+		circlepadsensitivity.value += dir * 0.1;
+		if (circlepadsensitivity.value < 0)
+			circlepadsensitivity.value = 0;
+		if (circlepadsensitivity.value > 1)
+			circlepadsensitivity.value = 1;
+		Cvar_SetValue ("circlepadsensitivity", circlepadsensitivity.value);
+		break;
+#else
 	case 6:	// music volume
 #ifdef _WIN32
 		bgmvolume.value += dir * 1.0;
@@ -1113,7 +1121,6 @@ void M_AdjustSliders (int dir)
 			bgmvolume.value = 1;
 		Cvar_SetValue ("bgmvolume", bgmvolume.value);
 		break;
-	#endif
 	case 7:	// sfx volume
 		volume.value += dir * 0.1;
 		if (volume.value < 0)
@@ -1122,7 +1129,7 @@ void M_AdjustSliders (int dir)
 			volume.value = 1;
 		Cvar_SetValue ("volume", volume.value);
 		break;
-
+#endif
 	case 8:	// allways run
 		if (cl_forwardspeed.value > 200)
 		{
@@ -1189,9 +1196,9 @@ void M_DrawCheckbox (int x, int y, int on)
 void M_Options_Draw (void)
 {
 	float		r;
-	qpic_t	*p;
 
-	M_DrawTransPic (16, 4, Draw_CachePic ("gfx/qplaque.lmp") );
+	qpic_t	*p;
+	
 	p = Draw_CachePic ("gfx/p_option.lmp");
 	M_DrawPic ( (320-p->width)/2, 4, p);
 
@@ -1217,9 +1224,13 @@ void M_Options_Draw (void)
 
 	#ifdef _3DS
 
-	M_Print (16, 80, "         C Sensitivity");
+	M_Print (16, 80, "   C-Stick Sensitivity");
 	r = (csensitivity.value - 1)/10;
 	M_DrawSlider (220, 80, r);
+
+	M_Print (16, 88, "  CirclePad Sensitivity");
+	r = (circlepadsensitivity.value * 10) / 10;
+	M_DrawSlider (220, 88, r);
 
 	#else
 
@@ -1227,11 +1238,11 @@ void M_Options_Draw (void)
 	r = bgmvolume.value;
 	M_DrawSlider (220, 80, r);
 
-	#endif
-
 	M_Print (16, 88, "          Sound Volume");
 	r = volume.value;
 	M_DrawSlider (220, 88, r);
+
+	#endif
 
 	M_Print (16, 96,  "            Always Run");
 	M_DrawCheckbox (220, 96, cl_forwardspeed.value > 200);
