@@ -793,6 +793,46 @@ void SCR_BringDownConsole (void)
 	VID_SetPalette (host_basepal);
 }
 
+void SCR_DrawScreen (void) {
+	
+	if (scr_drawdialog)
+	{
+		Sbar_Draw ();
+		Draw_FadeScreen ();
+		SCR_DrawNotifyString ();
+		scr_copyeverything = true;
+	}
+	else if (scr_drawloading)
+	{
+		SCR_DrawLoading ();
+		Sbar_Draw ();
+	}
+	else if (cl.intermission == 1 && key_dest == key_game)
+	{
+		Sbar_IntermissionOverlay ();
+	}
+	else if (cl.intermission == 2 && key_dest == key_game)
+	{
+		Sbar_FinaleOverlay ();
+		SCR_CheckDrawCenterString ();
+	}
+	else if (cl.intermission == 3 && key_dest == key_game)
+	{
+		SCR_CheckDrawCenterString ();
+	}
+	else
+	{
+		SCR_DrawRam ();
+		SCR_DrawNet ();
+		SCR_DrawTurtle ();
+		SCR_DrawPause ();
+		SCR_CheckDrawCenterString ();
+		Sbar_Draw ();
+		SCR_DrawConsole ();
+		M_Draw ();
+	}
+
+}
 
 /*
 ==================
@@ -840,9 +880,9 @@ void SCR_UpdateScreen (void)
 		vid.recalc_refdef = 1;
 	}
 
-//
-// check for vid changes
-//
+	//
+	// check for vid changes
+	//
 	if (oldfov != scr_fov.value)
 	{
 		oldfov = scr_fov.value;
@@ -867,10 +907,8 @@ void SCR_UpdateScreen (void)
 		SCR_CalcRefdef ();
 	}
 
-//
-// do 3D refresh drawing, and then update the screen
-//
-	D_EnableBackBufferAccess ();	// of all overlay stuff if drawing directly
+	//
+	// do 3D refresh drawing, and then update the screen
 
 	if (scr_fullupdate++ < vid.numpages)
 	{	// clear the entire screen
@@ -879,62 +917,17 @@ void SCR_UpdateScreen (void)
 		Sbar_Changed ();
 	}
 
-	pconupdate = NULL;
-
-
 	SCR_SetUpToDrawConsole ();
 	SCR_EraseCenterString ();
 
-	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
-									//  for linear writes all the time
-	VID_LockBuffer ();
 	V_RenderView ();
-	VID_UnlockBuffer ();
 
-	D_EnableBackBufferAccess ();	// of all overlay stuff if drawing directly
+	SCR_DrawScreen();
 
-	if (scr_drawdialog)
-	{
-		Sbar_Draw ();
-		Draw_FadeScreen ();
-		SCR_DrawNotifyString ();
-		scr_copyeverything = true;
-	}
-	else if (scr_drawloading)
-	{
-		SCR_DrawLoading ();
-		Sbar_Draw ();
-	}
-	else if (cl.intermission == 1 && key_dest == key_game)
-	{
-		Sbar_IntermissionOverlay ();
-	}
-	else if (cl.intermission == 2 && key_dest == key_game)
-	{
-		Sbar_FinaleOverlay ();
-		SCR_CheckDrawCenterString ();
-	}
-	else if (cl.intermission == 3 && key_dest == key_game)
-	{
-		SCR_CheckDrawCenterString ();
-	}
-	else
-	{
-		SCR_DrawRam ();
-		SCR_DrawNet ();
-		SCR_DrawTurtle ();
-		SCR_DrawPause ();
-		SCR_CheckDrawCenterString ();
-		Sbar_Draw ();
-		SCR_DrawConsole ();
-		M_Draw ();
-	}
-
-	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
-									//  for linear writes all the time
-	if (pconupdate)
-	{
-		D_UpdateRects (pconupdate);
+	if(separation_distance){
+		VID_SetBuffer(1);
+		SCR_DrawScreen();
+		VID_SetBuffer(0);
 	}
 
 	V_UpdatePalette ();

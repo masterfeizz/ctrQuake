@@ -337,7 +337,7 @@ int main (int argc, char **argv)
 	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
 	gfxSetDoubleBuffering(GFX_TOP, false);
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
-	gfxSet3D(false);
+	gfxSet3D(true);
 	consoleInit(GFX_BOTTOM, NULL);
 
 	#ifdef _3DS_CIA
@@ -363,6 +363,7 @@ int main (int argc, char **argv)
 	while (aptMainLoop())
 	{
 		time = Sys_FloatTime();
+		separation_distance = osGet3DSliderState();
 		Host_Frame (time - oldtime);
 		oldtime = time;
 	}

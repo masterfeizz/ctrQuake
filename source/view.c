@@ -1011,54 +1011,42 @@ void V_RenderView (void)
 	}
 	else
 	{
-		if (!cl.paused /* && (sv.maxclients > 1 || key_dest == key_game) */ )
+		if (!cl.paused)
 			V_CalcRefdef ();
 	}
 
 	R_PushDlights ();
 
-	if (lcd_x.value)
+	if (separation_distance)
 	{
-		//
-		// render two interleaved views
-		//
-		int		i;
+		int	i;
+		float distance = -separation_distance;
 
-		vid.rowbytes <<= 1;
-		vid.aspect *= 0.5;
-
-		r_refdef.viewangles[YAW] -= lcd_yaw.value;
-		for (i=0 ; i<3 ; i++)
-			r_refdef.vieworg[i] -= right[i]*lcd_x.value;
+		VID_SetBuffer(0);
+	    for (i=0 ; i<3 ; i++)
+			r_refdef.vieworg[i] += right[i] * distance;
+			
 		R_RenderView ();
 
-		vid.buffer += vid.rowbytes>>1;
+    	VID_SetBuffer(1);
+    	for (i=0 ; i<3 ; i++)
+			r_refdef.vieworg[i] -= 2 * right[i] * distance;
 
-		R_PushDlights ();
-
-		r_refdef.viewangles[YAW] += lcd_yaw.value*2;
-		for (i=0 ; i<3 ; i++)
-			r_refdef.vieworg[i] += 2*right[i]*lcd_x.value;
-		R_RenderView ();
-
-		vid.buffer -= vid.rowbytes>>1;
-
-		r_refdef.vrect.height <<= 1;
-
-		vid.rowbytes >>= 1;
-		vid.aspect *= 2;
+        R_RenderView ();
+        if (crosshair.value)
+			Draw_Character (scr_vrect.x + scr_vrect.width/2 + cl_crossx.value, 
+				scr_vrect.y + scr_vrect.height/2 + cl_crossy.value, '+');
+	
+        VID_SetBuffer(0);
 	}
 	else
 	{
 		R_RenderView ();
 	}
-
-#ifndef GLQUAKE
+		
 	if (crosshair.value)
 		Draw_Character (scr_vrect.x + scr_vrect.width/2 + cl_crossx.value, 
 			scr_vrect.y + scr_vrect.height/2 + cl_crossy.value, '+');
-#endif
-		
 }
 
 //============================================================================
