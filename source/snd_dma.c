@@ -282,12 +282,12 @@ sfx_t *S_FindName (char *name)
 	if (!name)
 		Sys_Error ("S_FindName: NULL\n");
 
-	if (Q_strlen(name) >= MAX_QPATH)
+	if (strlen(name) >= MAX_QPATH)
 		Sys_Error ("Sound name too long: %s", name);
 
 // see if already loaded
 	for (i=0 ; i < num_sfx ; i++)
-		if (!Q_strcmp(known_sfx[i].name, name))
+		if (!strcmp(known_sfx[i].name, name))
 		{
 			return &known_sfx[i];
 		}
@@ -545,7 +545,7 @@ void S_StopAllSounds(qboolean clear)
 		if (channels[i].sfx)
 			channels[i].sfx = NULL;
 
-	Q_memset(channels, 0, MAX_CHANNELS * sizeof(channel_t));
+	memset(channels, 0, MAX_CHANNELS * sizeof(channel_t));
 
 	if (clear)
 		S_ClearBuffer ();
@@ -599,7 +599,7 @@ void S_ClearBuffer (void)
 			}
 		}
 
-		Q_memset(pData, clear, shm->samples * shm->samplebits/8);
+		memset(pData, clear, shm->samples * shm->samplebits/8);
 
 		pDSBuf->lpVtbl->Unlock(pDSBuf, pData, dwSize, NULL, 0);
 	
@@ -607,7 +607,7 @@ void S_ClearBuffer (void)
 	else
 #endif
 	{
-		Q_memset(shm->buffer, clear, shm->samples * shm->samplebits/8);
+		memset(shm->buffer, clear, shm->samples * shm->samplebits/8);
 	}
 }
 
@@ -919,13 +919,13 @@ void S_Play(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			strcpy(name, Cmd_Argv(i));
+			strcat(name, ".wav");
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+			strcpy(name, Cmd_Argv(i));
 		sfx = S_PrecacheSound(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 1.0);
 		i++;
@@ -943,15 +943,15 @@ void S_PlayVol(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			strcpy(name, Cmd_Argv(i));
+			strcat(name, ".wav");
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+			strcpy(name, Cmd_Argv(i));
 		sfx = S_PrecacheSound(name);
-		vol = Q_atof(Cmd_Argv(i+1));
+		vol = atof(Cmd_Argv(i+1));
 		S_StartSound(hash++, 0, sfx, listener_origin, vol, 1.0);
 		i+=2;
 	}

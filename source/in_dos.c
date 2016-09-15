@@ -173,7 +173,7 @@ void IN_Init (void)
 	i = COM_CheckParm ("-control");
 	if (i)
 	{
-		extern_control = real2ptr(Q_atoi (com_argv[i+1]));
+		extern_control = real2ptr(atoi (com_argv[i+1]));
 		IN_StartupExternal ();
 	}
 }

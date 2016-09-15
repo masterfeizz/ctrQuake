@@ -398,7 +398,7 @@ void Mod_LoadTextures (lump_t *l)
 		// the pixels immediately follow the structures
 		memcpy ( tx+1, mt+1, pixels);
 
-		if (!Q_strncmp(mt->name,"sky",3))
+		if (!strncmp(mt->name,"sky",3))
 			R_InitSky (tx);
 	}
 
@@ -808,13 +808,13 @@ void Mod_LoadFaces (lump_t *l)
 
 	// set the drawing flags flag
 
-		if (!Q_strncmp(out->texinfo->texture->name,"sky",3))	// sky
+		if (!strncmp(out->texinfo->texture->name,"sky",3))	// sky
 		{
 			out->flags |= (SURF_DRAWSKY | SURF_DRAWTILED);
 			continue;
 		}
 
-		if (!Q_strncmp(out->texinfo->texture->name,"*",1))		// turbulent
+		if (!strncmp(out->texinfo->texture->name,"*",1))		// turbulent
 		{
 			out->flags |= (SURF_DRAWTURB | SURF_DRAWTILED);
 			for (i=0 ; i<2 ; i++)
@@ -1358,7 +1358,7 @@ void * Mod_LoadAliasSkin (void * pin, int *pskinindex, int skinsize,
 
 	if (r_pixbytes == 1)
 	{
-		Q_memcpy (pskin, pinskin, skinsize);
+		memcpy (pskin, pinskin, skinsize);
 	}
 	else if (r_pixbytes == 2)
 	{
@@ -1679,7 +1679,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe)
 	pspriteframe = Hunk_AllocName (sizeof (mspriteframe_t) + size*r_pixbytes,
 								   loadname);
 
-	Q_memset (pspriteframe, 0, sizeof (mspriteframe_t) + size);
+	memset (pspriteframe, 0, sizeof (mspriteframe_t) + size);
 	*ppframe = pspriteframe;
 
 	pspriteframe->width = width;
@@ -1694,7 +1694,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe)
 
 	if (r_pixbytes == 1)
 	{
-		Q_memcpy (&pspriteframe->pixels[0], (byte *)(pinframe + 1), size);
+		memcpy (&pspriteframe->pixels[0], (byte *)(pinframe + 1), size);
 	}
 	else if (r_pixbytes == 2)
 	{

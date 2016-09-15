@@ -308,7 +308,7 @@ void Draw_Pic (int x, int y, qpic_t *pic)
 
 		for (v=0 ; v<pic->height ; v++)
 		{
-			Q_memcpy (dest, source, pic->width);
+			memcpy (dest, source, pic->width);
 			dest += vid.rowbytes;
 			source += pic->width;
 		}

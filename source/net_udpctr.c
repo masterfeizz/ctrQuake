@@ -98,7 +98,7 @@ int UDP_Init (void)
 	myAddr = gethostid();
 
 	// if the quake hostname isn't set, set it to the machine name
-	if (Q_strcmp(hostname.string, "UNNAMED") == 0)
+	if (strcmp(hostname.string, "UNNAMED") == 0)
 	{
 		Cvar_Set ("hostname", "3ds");
 	}
@@ -115,8 +115,8 @@ int UDP_Init (void)
 	((struct sockaddr_in *)&broadcastaddr)->sin_port = htons(net_hostport);
 
 	UDP_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_tcpip_address,  UDP_AddrToString (&addr));
-	colon = Q_strrchr (my_tcpip_address, ':');
+	strcpy(my_tcpip_address,  UDP_AddrToString (&addr));
+	colon = strrchr (my_tcpip_address, ':');
 	if (colon)
 		*colon = 0;
 
@@ -246,7 +246,7 @@ static int PartialIPAddress (char *in, struct qsockaddr *hostaddr)
 	}
 
 	if (*b++ == ':')
-		port = Q_atoi(b);
+		port = atoi(b);
 	else
 		port = net_hostport;
 
@@ -367,7 +367,7 @@ int UDP_GetSocketAddr (int socket, struct qsockaddr *addr)
 	int addrlen = sizeof(struct qsockaddr);
 	unsigned int a;
 
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	getsockname(socket, (struct sockaddr *)addr, &addrlen);
 	a = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
 	if (a == 0 || a == inet_addr("127.0.0.1"))
@@ -385,11 +385,11 @@ int UDP_GetNameFromAddr (struct qsockaddr *addr, char *name)
 	hostentry = gethostbyaddr ((char *)&((struct sockaddr_in *)addr)->sin_addr, sizeof(struct in_addr), AF_INET);
 	if (hostentry)
 	{
-		Q_strncpy (name, (char *)hostentry->h_name, NET_NAMELEN - 1);
+		strncpy (name, (char *)hostentry->h_name, NET_NAMELEN - 1);
 		return 0;
 	}
 
-	Q_strcpy (name, UDP_AddrToString (addr));
+	strcpy (name, UDP_AddrToString (addr));
 	return 0;
 }
 
