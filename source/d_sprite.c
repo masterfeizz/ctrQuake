@@ -421,8 +421,10 @@ void D_DrawSprite (void)
 	ymin = ceil (ymin);
 	ymax = ceil (ymax);
 
-	if (ymin >= ymax)
+	if (ymin >= ymax){
+		free(spans);
 		return;		// doesn't cross any scans at all
+	}
 
 	cachewidth = r_spritedesc.pspriteframe->width;
 	sprite_height = r_spritedesc.pspriteframe->height;

@@ -225,7 +225,7 @@ void CL_ParseServerInfo (void)
 	if (i != PROTOCOL_VERSION)
 	{
 		Con_Printf ("Server returned version %i, not %i", i, PROTOCOL_VERSION);
-		return;
+		goto free_and_exit;
 	}
 
 // parse maxclients
@@ -233,7 +233,7 @@ void CL_ParseServerInfo (void)
 	if (cl.maxclients < 1 || cl.maxclients > MAX_SCOREBOARD)
 	{
 		Con_Printf("Bad maxclients (%u) from server\n", cl.maxclients);
-		return;
+		goto free_and_exit;
 	}
 	cl.scores = Hunk_AllocName (cl.maxclients*sizeof(*cl.scores), "scores");
 
@@ -264,7 +264,7 @@ void CL_ParseServerInfo (void)
 		if (nummodels==MAX_MODELS)
 		{
 			Con_Printf ("Server sent too many model precaches\n");
-			return;
+			goto free_and_exit;
 		}
 		strcpy (model_precache[nummodels], str);
 		Mod_TouchModel (str);
@@ -280,7 +280,7 @@ void CL_ParseServerInfo (void)
 		if (numsounds==MAX_SOUNDS)
 		{
 			Con_Printf ("Server sent too many sound precaches\n");
-			return;
+			goto free_and_exit;
 		}
 		strcpy (sound_precache[numsounds], str);
 		S_TouchSound (str);
@@ -295,7 +295,7 @@ void CL_ParseServerInfo (void)
 		if (cl.model_precache[i] == NULL)
 		{
 			Con_Printf("Model %s not found\n", model_precache[i]);
-			return;
+			goto free_and_exit;
 		}
 		CL_KeepaliveMessage ();
 	}
@@ -315,6 +315,8 @@ void CL_ParseServerInfo (void)
 	Hunk_Check ();		// make sure nothing is hurt
 
 	noclip_anglehack = false;		// noclip is turned off at start
+
+	free_and_exit:
 
 	for(i=0; i<MAX_MODELS; i++){
 		free(model_precache[i]);
@@ -833,8 +835,8 @@ void CL_ParseServerMessage (void)
 			i = MSG_ReadByte ();
 			if (i >= MAX_LIGHTSTYLES)
 				Sys_Error ("svc_lightstyle > MAX_LIGHTSTYLES");
-			Q_strcpy (cl_lightstyle[i].map,  MSG_ReadString());
-			cl_lightstyle[i].length = Q_strlen(cl_lightstyle[i].map);
+			strcpy (cl_lightstyle[i].map,  MSG_ReadString());
+			cl_lightstyle[i].length = strlen(cl_lightstyle[i].map);
 			break;
 
 		case svc_sound:
