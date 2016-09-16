@@ -124,8 +124,8 @@ D_PolysetDraw
 */
 void D_PolysetDraw (void)
 {
-	spanpackage_t	*spans = malloc(sizeof(spanpackage_t) * (DPS_MAXSPANS + 1 +
-			((CACHE_SIZE - 1) / sizeof(spanpackage_t)) + 1));
+	spanpackage_t	spans[DPS_MAXSPANS + 1 +
+			((CACHE_SIZE - 1) / sizeof(spanpackage_t)) + 1];
 						// one extra because of cache line pretouching
 
 	a_spans = (spanpackage_t *)
@@ -139,8 +139,8 @@ void D_PolysetDraw (void)
 	{
 		D_DrawNonSubdiv ();
 	}
-	free(spans);
 }
+
 
 
 /*

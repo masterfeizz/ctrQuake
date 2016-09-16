@@ -27,6 +27,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ctr.h"
 #include "touch_ctr.h"
 
+int __stacksize__ = 256 * 1024;
+
 u8 isN3DS;
 
 #define TICKS_PER_SEC 268123480.0

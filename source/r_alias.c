@@ -702,9 +702,9 @@ R_AliasDrawModel
 */
 void R_AliasDrawModel (alight_t *plighting)
 {
-	finalvert_t		*finalverts = malloc(sizeof(finalvert_t) * MAXALIASVERTS +
-						((CACHE_SIZE - 1) / sizeof(finalvert_t)) + 1);
-	auxvert_t		*auxverts = malloc(sizeof(auxvert_t) * MAXALIASVERTS);
+	finalvert_t		finalverts[MAXALIASVERTS +
+						((CACHE_SIZE - 1) / sizeof(finalvert_t)) + 1];
+	auxvert_t		auxverts[MAXALIASVERTS];
 
 	r_amodels_drawn++;
 
@@ -749,7 +749,4 @@ void R_AliasDrawModel (alight_t *plighting)
 		R_AliasPrepareUnclippedPoints ();
 	else
 		R_AliasPreparePoints ();
-
-	free(finalverts);
-	free(auxverts);
 }

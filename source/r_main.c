@@ -875,10 +875,10 @@ R_EdgeDrawing
 */
 void R_EdgeDrawing (void)
 {
-	edge_t	*ledges = malloc(sizeof(edge_t) * NUMSTACKEDGES +
-				((CACHE_SIZE - 1) / sizeof(edge_t)) + 1);
-	surf_t	*lsurfs = malloc(sizeof(surf_t) * NUMSTACKSURFACES +
-				((CACHE_SIZE - 1) / sizeof(surf_t)) + 1);
+	edge_t	ledges[NUMSTACKEDGES +
+				((CACHE_SIZE - 1) / sizeof(edge_t)) + 1];
+	surf_t	lsurfs[NUMSTACKSURFACES +
+				((CACHE_SIZE - 1) / sizeof(surf_t)) + 1];
 
 	if (auxedges)
 	{
@@ -900,17 +900,18 @@ void R_EdgeDrawing (void)
 		surfaces--;
 		R_SurfacePatch ();
 	}
+
 	R_BeginEdgeFrame ();
 
 	if (r_dspeeds.value)
 	{
 		rw_time1 = Sys_FloatTime ();
 	}
+
 	R_RenderWorld ();
 
-	if (r_drawculledpolys){
+	if (r_drawculledpolys)
 		R_ScanEdges ();
-	}
 
 // only the world can be drawn back to front with no z reads or compares, just
 // z writes, so have the driver turn z compares on now
@@ -932,17 +933,13 @@ void R_EdgeDrawing (void)
 
 	if (!r_dspeeds.value)
 	{
-		VID_UnlockBuffer();
-		//S_ExtraUpdate ();	// don't let sound get messed up if going slow
-		VID_LockBuffer();
+		VID_UnlockBuffer ();
+		S_ExtraUpdate ();	// don't let sound get messed up if going slow
+		VID_LockBuffer ();
 	}
-
-	if (!(r_drawpolys | r_drawculledpolys)){
+	
+	if (!(r_drawpolys | r_drawculledpolys))
 		R_ScanEdges ();
-	}
-
-	free(ledges);
-	free(lsurfs);
 }
 
 
@@ -955,12 +952,13 @@ r_refdef must be set before the first call
 */
 void R_RenderView_ (void)
 {
-	byte	*warpbuffer = malloc(sizeof(byte)*(WARP_WIDTH * WARP_HEIGHT));
+	byte	warpbuffer[WARP_WIDTH * WARP_HEIGHT];
 
 	r_warpbuffer = warpbuffer;
 
 	if (r_timegraph.value || r_speeds.value || r_dspeeds.value)
 		r_time1 = Sys_FloatTime ();
+
 	R_SetupFrame ();
 
 #ifdef PASSAGES
@@ -977,27 +975,29 @@ SetVisibilityByPassages ();
 
 	if (!cl_entities[0].model || !cl.worldmodel)
 		Sys_Error ("R_RenderView: NULL worldmodel");
-
+		
 	if (!r_dspeeds.value)
 	{
 		VID_UnlockBuffer ();
-		//S_ExtraUpdate ();	// don't let sound get messed up if going slow
+		S_ExtraUpdate ();	// don't let sound get messed up if going slow
 		VID_LockBuffer ();
 	}
+	
 	R_EdgeDrawing ();
 
 	if (!r_dspeeds.value)
 	{
 		VID_UnlockBuffer ();
-		//S_ExtraUpdate ();	// don't let sound get messed up if going slow
+		S_ExtraUpdate ();	// don't let sound get messed up if going slow
 		VID_LockBuffer ();
 	}
-
+	
 	if (r_dspeeds.value)
 	{
 		se_time2 = Sys_FloatTime ();
 		de_time1 = se_time2;
 	}
+
 	R_DrawEntitiesOnList ();
 
 	if (r_dspeeds.value)
@@ -1013,6 +1013,7 @@ SetVisibilityByPassages ();
 		dv_time2 = Sys_FloatTime ();
 		dp_time1 = Sys_FloatTime ();
 	}
+
 	R_DrawParticles ();
 
 	if (r_dspeeds.value)
@@ -1028,7 +1029,7 @@ SetVisibilityByPassages ();
 
 	if (r_aliasstats.value)
 		R_PrintAliasStats ();
-
+		
 	if (r_speeds.value)
 		R_PrintTimes ();
 
@@ -1043,7 +1044,6 @@ SetVisibilityByPassages ();
 
 // back to high floating-point precision
 	Sys_HighFPPrecision ();
-	free(warpbuffer);
 }
 
 void R_RenderView (void)
