@@ -1,5 +1,6 @@
 <shortcut>
 	<name>Team Fortress</name>
+	<description>Port of Team Fortress</description>
 	<executable>/3ds/ctrQuake/ctrQuake.3dsx</executable>
 	<arg>-game fortress</arg>
 </shortcut>
