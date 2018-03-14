@@ -358,7 +358,7 @@ void SV_AirMove (void)
 	{	// noclip
 		VectorCopy (wishvel, velocity);
 	}
-	else if ( onground )
+	else if ( (int)sv_player->v.flags & FL_ONGROUND )
 	{
 		SV_UserFriction ();
 		SV_Accelerate ();

@@ -102,7 +102,7 @@ typedef struct {
 typedef enum { SPR_SINGLE=0, SPR_GROUP } spriteframetype_t;
 
 typedef struct {
-	spriteframetype_t	type;
+	int	type;
 } dspriteframetype_t;
 
 #define IDSPRITEHEADER	(('P'<<24)+('S'<<16)+('D'<<8)+'I')

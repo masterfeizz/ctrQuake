@@ -301,48 +301,7 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 	aliasmodel = m;
 	paliashdr = hdr;	// (aliashdr_t *)Mod_Extradata (m);
 
-	//
-	// look for a cached version
-	//
-	strcpy (cache, "glquake/");
-	COM_StripExtension (m->name+strlen("progs/"), cache+strlen("glquake/"));
-	strcat (cache, ".ms2");
-
-	COM_FOpenFile (cache, &f);	
-	if (f)
-	{
-		fread (&numcommands, 4, 1, f);
-		fread (&numorder, 4, 1, f);
-		fread (&commands, numcommands * sizeof(commands[0]), 1, f);
-		fread (&vertexorder, numorder * sizeof(vertexorder[0]), 1, f);
-		fclose (f);
-	}
-	else
-	{
-		//
-		// build it from scratch
-		//
-		Con_Printf ("meshing %s...\n",m->name);
-
-		BuildTris ();		// trifans or lists
-
-		//
-		// save out the cached version
-		//
-		sprintf (fullpath, "%s/%s", com_gamedir, cache);
-		f = fopen (fullpath, "wb");
-		if (f)
-		{
-			fwrite (&numcommands, 4, 1, f);
-			fwrite (&numorder, 4, 1, f);
-			fwrite (&commands, numcommands * sizeof(commands[0]), 1, f);
-			fwrite (&vertexorder, numorder * sizeof(vertexorder[0]), 1, f);
-			fclose (f);
-		}
-	}
-
-
-	// save the data out
+	BuildTris ();		// trifans or lists
 
 	paliashdr->poseverts = numorder;
 
