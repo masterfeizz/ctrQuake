@@ -63,6 +63,7 @@ typedef struct
 	char	identifier[64];
 	int		width, height;
 	qboolean	mipmap;
+	int 		checksum;
 } gltexture_t;
 
 #define	MAX_GLTEXTURES	1024
@@ -1231,11 +1232,24 @@ static	unsigned	trans[640*480];		// FIXME, temporary
 GL_LoadTexture
 ================
 */
+
 int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
 {
+	static int checksum_table[256];
+
 	qboolean	noalpha;
-	int			i, p, s;
+	int			i, p, s, checksum;
 	gltexture_t	*glt;
+
+	checksum = 0;
+
+ 	s = width*height;
+
+ 	for (i = 0;i < 256;i++) 
+ 		checksum_table[i] = i + 1;
+
+ 	for (i = 0;i < s;i++)
+ 		checksum += (checksum_table[data[i] & 255]++);
 
 	// see if the texture is allready present
 	if (identifier[0])
@@ -1244,30 +1258,34 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 		{
 			if (!strcmp (identifier, glt->identifier))
 			{
+				if(checksum != glt->checksum)
+					goto GL_LoadTexture_setup;
 				if (width != glt->width || height != glt->height)
-					Sys_Error ("GL_LoadTexture: cache mismatch");
+		    		goto GL_LoadTexture_setup;
+
 				return gltextures[i].texnum;
 			}
 		}
 	}
-	else {
-		glt = &gltextures[numgltextures];
-		numgltextures++;
-	}
+
+	glt = &gltextures[numgltextures];
+	numgltextures++;
 
 	strcpy (glt->identifier, identifier);
 	glt->texnum = texture_extension_number;
+	texture_extension_number++;
+
+	GL_LoadTexture_setup:
+
+	glt->checksum = checksum;
 	glt->width = width;
 	glt->height = height;
 	glt->mipmap = mipmap;
 
-	GL_Bind(texture_extension_number );
-
+	GL_Bind(glt->texnum);
 	GL_Upload8 (data, width, height, mipmap, alpha);
 
-	texture_extension_number++;
-
-	return texture_extension_number-1;
+	return glt->texnum;
 }
 
 /*
