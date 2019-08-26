@@ -42,7 +42,7 @@ LIBS	:=  -lpicaGL -lctru -lm
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) /home/felipe/Workspace/picaGL
+LIBDIRS	:= $(CTRULIB) $(DEVKITPRO)/picaGL
 
 
 #---------------------------------------------------------------------------------
@@ -113,8 +113,7 @@ COMMON_OBJS =	chase.c \
 				gl_warp.c \
 				gl_vidctr.c \
 				r_part.c \
-				touch_ctr.c \
-				heap_ctr.c
+				touch_ctr.c
 
 CFILES		:=	$(COMMON_OBJS)
 CPPFILES	:=	

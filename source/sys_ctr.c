@@ -25,6 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define TICKS_PER_SEC 268123480.0
 
+int __stacksize__ = 4 * 1024 * 1024; 
+u32 __ctru_linear_heap_size = 24 * 1024 * 1024; 
+
 extern void Touch_Init();
 extern void Touch_Update();
 
@@ -284,7 +287,7 @@ int main (int argc, char **argv)
 
 	osSetSpeedupEnable(true);
 
-	gfxInit(GSP_BGR8_OES,GSP_RGB565_OES,false);
+	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false); 
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
 	gfxSwapBuffersGpu();
 

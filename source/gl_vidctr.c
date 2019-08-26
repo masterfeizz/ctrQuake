@@ -91,6 +91,7 @@ void GL_BeginRendering (int *x, int *y, int *width, int *height)
 void GL_EndRendering (void)
 {
 	glFinish();
+	pglSwapBuffers(); 
 }
 
 void	VID_SetPalette (unsigned char *palette)
