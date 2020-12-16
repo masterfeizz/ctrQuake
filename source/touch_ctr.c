@@ -41,7 +41,7 @@ uint8_t keyboardToggled;
 char lastKey = 0;
 int tmode;
 u16* tfb;
-touchPosition oldtouch, touch;
+static touchPosition oldtouch, touch;
 u64 tick;
 
 u64 lastTap = 0;
