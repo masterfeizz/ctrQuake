@@ -23,44 +23,42 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "r_local.h"
 
 // only the refresh window will be updated unless these variables are flagged
-int			scr_copytop;
-int			scr_copyeverything;
+int				scr_copytop;
+int				scr_copyeverything;
 
-float		scr_con_current;
-float		scr_conlines;		// lines of console to display
+float			scr_con_current;
+float			scr_conlines;		// lines of console to display
 
-float		oldscreensize, oldfov;
-cvar_t		scr_viewsize = {"viewsize","100", true};
-cvar_t		scr_fov = {"fov","90"};	// 10 - 170
-cvar_t		scr_conspeed = {"scr_conspeed","300"};
-cvar_t		scr_centertime = {"scr_centertime","2"};
-cvar_t		scr_showram = {"showram","1"};
-cvar_t		scr_showturtle = {"showturtle","0"};
-cvar_t		scr_showpause = {"showpause","1"};
-cvar_t		scr_printspeed = {"scr_printspeed","8"};
+float			oldscreensize, oldfov;
+cvar_t			scr_viewsize = {"viewsize","100", true};
+cvar_t			scr_fov = {"fov","90"};	// 10 - 170
+cvar_t			scr_conspeed = {"scr_conspeed","300"};
+cvar_t			scr_centertime = {"scr_centertime","2"};
+cvar_t			scr_showram = {"showram","1"};
+cvar_t			scr_showturtle = {"showturtle","0"};
+cvar_t			scr_showpause = {"showpause","1"};
+cvar_t			scr_printspeed = {"scr_printspeed","8"};
 
-qboolean	scr_initialized;		// ready to draw
+qboolean		scr_initialized;		// ready to draw
 
-qpic_t		*scr_ram;
-qpic_t		*scr_net;
-qpic_t		*scr_turtle;
+qpic_t			*scr_ram;
+qpic_t			*scr_net;
+qpic_t			*scr_turtle;
 
-int			scr_fullupdate;
+int				scr_fullupdate;
 
-int			clearconsole;
-int			clearnotify;
+int				clearconsole;
+int				clearnotify;
 
-viddef_t	vid;				// global video state
+vrect_t			*pconupdate;
+vrect_t			scr_vrect;
 
-vrect_t		*pconupdate;
-vrect_t		scr_vrect;
+qboolean		scr_disabled_for_loading;
+qboolean		scr_drawloading;
+float			scr_disabled_time;
+qboolean		scr_skipupdate;
 
-qboolean	scr_disabled_for_loading;
-qboolean	scr_drawloading;
-float		scr_disabled_time;
-qboolean	scr_skipupdate;
-
-qboolean	block_drawing;
+qboolean		block_drawing;
 
 void SCR_ScreenShot_f (void);
 

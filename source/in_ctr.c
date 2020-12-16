@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 circlePosition cstick;
 circlePosition circlepad;
-touchPosition oldtouch, touch;
+static touchPosition oldtouch, touch;
 
 cvar_t  csensitivity = {"csensitivity","3", true};
 cvar_t  circlepadsensitivity = {"circlepadsensitivity","10.0", true};
