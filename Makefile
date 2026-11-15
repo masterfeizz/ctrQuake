@@ -27,6 +27,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
+			-std=gnu99 -fcommon -Wno-implicit-function-declaration -Wno-incompatible-pointer-types -Wno-int-conversion \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DGLQUAKE
@@ -42,7 +43,8 @@ LIBS	:=  -lpicaGL -lctru -lm
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) $(DEVKITPRO)/picaGL
+PICAGL	?= $(DEVKITPRO)/picaGL
+LIBDIRS	:= $(CTRULIB) $(PICAGL)
 
 
 #---------------------------------------------------------------------------------
