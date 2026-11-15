@@ -91,6 +91,9 @@ cvar_t		scr_printspeed = {"scr_printspeed","8"};
 cvar_t		gl_triplebuffer = {"gl_triplebuffer", "1", true };
 
 extern	cvar_t	crosshair;
+extern	cvar_t	r_stereo_hud;
+void	VID_StereoTarget (int eye);
+qboolean	VID_StereoEnable (qboolean enable);
 
 qboolean	scr_initialized;		// ready to draw
 
@@ -809,6 +812,58 @@ void SCR_TileClear (void)
 
 /*
 ==================
+SCR_Draw2D
+
+HUD, menus, console and other overlays on top of the 3D view
+==================
+*/
+static void SCR_Draw2D (void)
+{
+
+	//
+	// draw any areas not covered by the refresh
+	//
+	SCR_TileClear ();
+
+	if (scr_drawdialog)
+	{
+		Sbar_Draw ();
+		Draw_FadeScreen ();
+		SCR_DrawNotifyString ();
+		scr_copyeverything = true;
+	}
+	else if (scr_drawloading)
+	{
+		SCR_DrawLoading ();
+		Sbar_Draw ();
+	}
+	else if (cl.intermission == 1 && key_dest == key_game)
+	{
+		Sbar_IntermissionOverlay ();
+	}
+	else if (cl.intermission == 2 && key_dest == key_game)
+	{
+		Sbar_FinaleOverlay ();
+		SCR_CheckDrawCenterString ();
+	}
+	else
+	{
+		if (crosshair.value)
+			Draw_Character (scr_vrect.x + scr_vrect.width/2, scr_vrect.y + scr_vrect.height/2, '+');
+		
+		SCR_DrawRam ();
+		SCR_DrawNet ();
+		SCR_DrawTurtle ();
+		SCR_DrawPause ();
+		SCR_CheckDrawCenterString ();
+		Sbar_Draw ();
+		SCR_DrawConsole ();	
+		M_Draw ();
+	}
+}
+
+/*
+==================
 SCR_UpdateScreen
 
 This is called every frame, and can also be called explicitly to flush
@@ -871,49 +926,35 @@ void SCR_UpdateScreen (void)
 //
 	SCR_SetUpToDrawConsole ();
 	
+	r_stereo_halfeye = 0;	// set by V_RenderStereo for a stereo frame
 	V_RenderView ();
 
 	GL_Set2D ();
 
-	//
-	// draw any areas not covered by the refresh
-	//
-	SCR_TileClear ();
+	if (r_stereo_halfeye > 0)
+	{	// stereo: draw the 2D layer once per eye, shifted apart so it floats
+		// r_stereo_hud pixels in front of the screen (at default depth and
+		// full slider; scales with both), ahead of the gun (STEREO_GUN_DEPTH)
+		float	shift = r_stereo_hud.value / 2 * r_stereo_halfeye /
+			(STEREO_MAX_HALFEYE * 3 / 5.0f);
+		float	centertime = scr_centertime_off;
+		int		eye;
 
-	if (scr_drawdialog)
-	{
-		Sbar_Draw ();
-		Draw_FadeScreen ();
-		SCR_DrawNotifyString ();
-		scr_copyeverything = true;
-	}
-	else if (scr_drawloading)
-	{
-		SCR_DrawLoading ();
-		Sbar_Draw ();
-	}
-	else if (cl.intermission == 1 && key_dest == key_game)
-	{
-		Sbar_IntermissionOverlay ();
-	}
-	else if (cl.intermission == 2 && key_dest == key_game)
-	{
-		Sbar_FinaleOverlay ();
-		SCR_CheckDrawCenterString ();
+		for (eye = -1 ; eye <= 1 ; eye += 2)
+		{
+			scr_centertime_off = centertime;	// counted down once per frame
+			VID_StereoTarget (eye);
+			glLoadIdentity ();
+			glTranslatef (-eye * shift, 0, 0);
+			SCR_Draw2D ();
+		}
+		glLoadIdentity ();
+		VID_StereoTarget (-1);
 	}
 	else
-	{
-		if (crosshair.value)
-			Draw_Character (scr_vrect.x + scr_vrect.width/2, scr_vrect.y + scr_vrect.height/2, '+');
-		
-		SCR_DrawRam ();
-		SCR_DrawNet ();
-		SCR_DrawTurtle ();
-		SCR_DrawPause ();
-		SCR_CheckDrawCenterString ();
-		Sbar_Draw ();
-		SCR_DrawConsole ();	
-		M_Draw ();
+	{	// no 3D view this frame (slider down, full console, between maps)
+		VID_StereoEnable (false);
+		SCR_Draw2D ();
 	}
 
 	V_UpdatePalette ();
