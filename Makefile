@@ -37,14 +37,14 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lpicaGL -lctru -lm
+LIBS	:=  -lpicaGL -lvorbisidec -logg -lctru -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 PICAGL	?= $(DEVKITPRO)/picaGL
-LIBDIRS	:= $(CTRULIB) $(PICAGL)
+LIBDIRS	:= $(CTRULIB) $(PICAGL) $(PORTLIBS)
 
 
 #---------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ COMMON_OBJS =	chase.c \
 				snd_mem.c \
 				snd_ctr.c \
 				in_ctr.c \
-				cd_null.c \
+				cd_ctr.c \
 				gl_draw.c \
 				gl_mesh.c \
 				gl_model.c \
