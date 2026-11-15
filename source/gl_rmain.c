@@ -644,6 +644,8 @@ void R_DrawEntitiesOnList (void)
 R_DrawViewModel
 =============
 */
+void R_LoadViewMatrix (void);
+
 void R_DrawViewModel (void)
 {
 	float		ambient[4], diffuse[4];
@@ -705,7 +707,31 @@ void R_DrawViewModel (void)
 
 	// hack the depth range to prevent view model from poking into walls
 	glDepthRange (gldepthmin, gldepthmin + 0.3*(gldepthmax-gldepthmin));
-	R_DrawAliasModel (currententity);
+	if (r_stereo_eye)
+	{
+		// Move the gun with this eye, so it has no parallax of its own,
+		// then shear eye space (x += k*z) so the whole gun shifts the same
+		// number of pixels: with k = eye*halfeye/STEREO_GUN_DEPTH it appears
+		// at STEREO_GUN_DEPTH, one solid gun just in front of the screen.
+		// (Swapping the projection instead makes picaGL drop the gun.)
+		GLfloat	shear[16] = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
+		vec3_t	oldorg;
+
+		shear[8] = r_stereo_eye * r_stereo_halfeye / STEREO_GUN_DEPTH;
+		VectorCopy (currententity->origin, oldorg);
+		VectorMA (oldorg, r_stereo_eye * r_stereo_halfeye, vright, currententity->origin);
+		glPushMatrix ();
+		glLoadIdentity ();
+		glMultMatrixf (shear);
+		R_LoadViewMatrix ();
+
+		R_DrawAliasModel (currententity);
+
+		glPopMatrix ();
+		VectorCopy (oldorg, currententity->origin);
+	}
+	else
+		R_DrawAliasModel (currententity);
 	glDepthRange (gldepthmin, gldepthmax);
 }
 
@@ -770,7 +796,14 @@ void R_SetFrustum (void)
 {
 	int		i;
 
-	if (r_refdef.fov_x == 90) 
+	// stereo: each eye's off-axis frustum is turned by up to atan(halfeye/C)
+	// from the centered one, so cull with a slightly wider view
+	float	fov_x = r_refdef.fov_x, fov_y = r_refdef.fov_y;
+
+	if (r_stereo_eye)
+		fov_x += 2 * atan (r_stereo_halfeye / STEREO_CONVERGENCE) * 180 / M_PI + 1;
+
+	if (fov_x == 90)
 	{
 		// front side is visible
 
@@ -783,13 +816,13 @@ void R_SetFrustum (void)
 	else
 	{
 		// rotate VPN right by FOV_X/2 degrees
-		RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90-r_refdef.fov_x / 2 ) );
+		RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90-fov_x / 2 ) );
 		// rotate VPN left by FOV_X/2 degrees
-		RotatePointAroundVector( frustum[1].normal, vup, vpn, 90-r_refdef.fov_x / 2 );
+		RotatePointAroundVector( frustum[1].normal, vup, vpn, 90-fov_x / 2 );
 		// rotate VPN up by FOV_X/2 degrees
-		RotatePointAroundVector( frustum[2].normal, vright, vpn, 90-r_refdef.fov_y / 2 );
+		RotatePointAroundVector( frustum[2].normal, vright, vpn, 90-fov_y / 2 );
 		// rotate VPN down by FOV_X/2 degrees
-		RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - r_refdef.fov_y / 2 ) );
+		RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - fov_y / 2 ) );
 	}
 
 	for (i=0 ; i<4 ; i++)
@@ -858,6 +891,46 @@ void MYgluPerspective( GLdouble fovy, GLdouble aspect,
 
 /*
 =============
+R_StereoFrustum
+
+gluPerspective (fov_y, aspect, 4, 4096), shifted sideways per eye. With the
+eye moved by eye*halfeye, centering the frustum at -eye*halfeye*near/C puts
+points C units ahead at the same screen position in both eyes.
+=============
+*/
+
+void R_StereoFrustum (float aspect)
+{
+	float	znear = 4, ymax, xmax, shift = 0;
+
+	ymax = znear * tan (r_refdef.fov_y * M_PI / 360.0);
+	xmax = ymax * aspect;
+
+	if (r_stereo_eye)
+		shift = -r_stereo_eye * r_stereo_halfeye * znear / STEREO_CONVERGENCE;
+
+	glFrustum (-xmax + shift, xmax + shift, -ymax, ymax, znear, 4096);
+}
+
+/*
+=============
+R_LoadViewMatrix
+
+Multiplies the current modelview by the view transform for r_refdef.
+=============
+*/
+void R_LoadViewMatrix (void)
+{
+    glRotatef (-90,  1, 0, 0);	    // put Z going up
+    glRotatef (90,  0, 0, 1);	    // put Z going up
+    glRotatef (-r_refdef.viewangles[2],  1, 0, 0);
+    glRotatef (-r_refdef.viewangles[0],  0, 1, 0);
+    glRotatef (-r_refdef.viewangles[1],  0, 0, 1);
+    glTranslatef (-r_refdef.vieworg[0],  -r_refdef.vieworg[1],  -r_refdef.vieworg[2]);
+}
+
+/*
+=============
 R_SetupGL
 =============
 */
@@ -901,7 +974,7 @@ void R_SetupGL (void)
 	glViewport (glx + x, gly + y2, w, h);
     screenaspect = (float)r_refdef.vrect.width/r_refdef.vrect.height;
     
-    gluPerspective (r_refdef.fov_y,  screenaspect,  4,  4096);
+	R_StereoFrustum (screenaspect);
 
 	if (mirror)
 	{
@@ -917,12 +990,7 @@ void R_SetupGL (void)
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity ();
 
-    glRotatef (-90,  1, 0, 0);	    // put Z going up
-    glRotatef (90,  0, 0, 1);	    // put Z going up
-    glRotatef (-r_refdef.viewangles[2],  1, 0, 0);
-    glRotatef (-r_refdef.viewangles[0],  0, 1, 0);
-    glRotatef (-r_refdef.viewangles[1],  0, 0, 1);
-    glTranslatef (-r_refdef.vieworg[0],  -r_refdef.vieworg[1],  -r_refdef.vieworg[2]);
+	R_LoadViewMatrix ();
 
 	glGetFloatv (GL_MODELVIEW_MATRIX, r_world_matrix);
 

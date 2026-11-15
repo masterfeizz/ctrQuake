@@ -990,6 +990,68 @@ The player's clipping box goes from (-16 -16 -24) to (16 16 32) from
 the entity origin, so any view position inside that will be valid
 ==================
 */
+/*
+==================
+Stereoscopic 3D (GPU renderer)
+
+Each eye is the centered view moved sideways by half the eye distance, with an
+off-axis projection (gl_rmain.c R_SetupGL) whose frusta meet STEREO_CONVERGENCE
+units ahead: that distance is at screen depth, the world goes behind it and
+only nearby things come out. No toe-in, so there is no vertical disparity.
+
+The weapon is drawn as if attached to each eye, with eye space sheared
+(R_DrawViewModel), so both eyes see an identical gun placed at
+STEREO_GUN_DEPTH, just in front of the screen, instead of a gun ~15 units
+away seen from two angles (a double image).
+
+The HUD, menus, console and crosshair are then drawn once per eye by
+SCR_UpdateScreen, shifted r_stereo_hud pixels apart, in front of the gun.
+==================
+*/
+cvar_t	r_stereo_depth = {"r_stereo_depth", "3", true};	// 0 = off, 1..5
+cvar_t	r_stereo_hud = {"r_stereo_hud", "10", true};	// HUD pop-out, pixels
+
+int	r_stereo_eye;		// -1 left, +1 right, 0 mono
+float	r_stereo_halfeye;	// world units
+
+float	VID_StereoSlider (void);
+qboolean VID_StereoEnable (qboolean enable);
+void	VID_StereoTarget (int eye);	// -1 left, +1 right
+
+qboolean V_RenderStereo (void)
+{
+	float	depth = r_stereo_depth.value, slider = VID_StereoSlider ();
+	vec3_t	org, fwd, rgt, up;
+	int	eye, i;
+
+	if (depth > 5)
+		depth = 5;
+	if (depth <= 0 || slider <= 0 || !VID_StereoEnable (true))
+	{
+		VID_StereoEnable (false);
+		return false;
+	}
+
+	r_stereo_halfeye = slider * depth / 5.0f * STEREO_MAX_HALFEYE;
+	VectorCopy (r_refdef.vieworg, org);	// reused as-is while paused
+	AngleVectors (r_refdef.viewangles, fwd, rgt, up);
+
+	for (eye = -1 ; eye <= 1 ; eye += 2)
+	{
+		if (eye > 0)
+			R_PushDlights ();	// marks are per frame; redo for the 2nd view
+		VID_StereoTarget (eye);
+		r_stereo_eye = eye;
+		for (i=0 ; i<3 ; i++)
+			r_refdef.vieworg[i] = org[i] + eye * r_stereo_halfeye * rgt[i];
+		R_RenderView ();
+	}
+
+	VectorCopy (org, r_refdef.vieworg);
+	r_stereo_eye = 0;	// SCR_UpdateScreen draws the HUD per eye
+	return true;
+}
+
 extern vrect_t	scr_vrect;
 
 void V_RenderView (void)
@@ -1048,7 +1110,7 @@ void V_RenderView (void)
 		vid.rowbytes >>= 1;
 		vid.aspect *= 2;
 	}
-	else
+	else if (!V_RenderStereo ())
 	{
 		R_RenderView ();
 	}
@@ -1075,6 +1137,8 @@ void V_Init (void)
 	Cmd_AddCommand ("centerview", V_StartPitchDrift);
 
 	Cvar_RegisterVariable (&lcd_x);
+	Cvar_RegisterVariable (&r_stereo_depth);
+	Cvar_RegisterVariable (&r_stereo_hud);
 	Cvar_RegisterVariable (&lcd_yaw);
 
 	Cvar_RegisterVariable (&v_centermove);

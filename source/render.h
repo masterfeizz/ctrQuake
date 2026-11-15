@@ -156,3 +156,11 @@ void D_DeleteSurfaceCache (void);
 void D_InitCaches (void *buffer, int size);
 void R_SetVrect (vrect_t *pvrect, vrect_t *pvrectin, int lineadj);
 
+
+// stereoscopic 3D (view.c, gl_rmain.c)
+#define STEREO_CONVERGENCE	96.0f	// world units at screen depth
+#define STEREO_GUN_DEPTH	56.0f	// apparent depth of the weapon
+#define STEREO_MAX_HALFEYE	4.0f	// half eye distance at slider max, depth 5
+extern int	r_stereo_eye;
+extern float	r_stereo_halfeye;
+qboolean V_RenderStereo (void);

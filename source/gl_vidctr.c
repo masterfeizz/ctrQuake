@@ -30,7 +30,7 @@ int		texture_extension_number = 1;
 
 float	gldepthmin, gldepthmax;
 
-cvar_t	gl_ztrick = {"gl_ztrick","1"};
+cvar_t	gl_ztrick = {"gl_ztrick","0"};	// 1: every other frame drops the viewmodel on picaGL
 
 const char *gl_vendor;
 const char *gl_renderer;
@@ -79,6 +79,26 @@ void GL_Init (void)
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
+
+/*
+===============
+Stereoscopic 3D helpers for view.c (see V_RenderStereo)
+===============
+*/
+float VID_StereoSlider (void)
+{
+	return osGet3DSliderState ();
+}
+
+qboolean VID_StereoEnable (qboolean enable)
+{
+	return pglStereoEnable (enable) ? true : false;
+}
+
+void VID_StereoTarget (int eye)	// -1 left, +1 right
+{
+	pglStereoTarget (eye > 0 ? PGL_STEREO_RIGHT : PGL_STEREO_LEFT);
+}
 
 void GL_BeginRendering (int *x, int *y, int *width, int *height)
 {
